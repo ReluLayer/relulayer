@@ -2,6 +2,9 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
+    // Register kani custom cfg with rustc check-cfg (Rust 1.80+)
+    println!("cargo::rustc-check-cfg=cfg(kani)");
+
     let crate_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
     let out_dir = PathBuf::from(&crate_dir).join("include");
     std::fs::create_dir_all(&out_dir).ok();
