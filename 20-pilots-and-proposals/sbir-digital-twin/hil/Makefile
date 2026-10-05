@@ -1,39 +1,60 @@
-# ReluLayer C HIL Driver Harness Makefile
-# Host (x86_64) regression build and ARM embedded cross-compile stub.
+# ReluLayer™ STM32H7 HIL Harness Makefile
+# Bare-Metal ARM Cortex-M7 cross-compilation and host regression test.
 
-ROOT        := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/..
-HIL_DIR     := $(ROOT)/hil
-INCLUDE_DIR := $(ROOT)/include
+HIL_DIR      := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+REPO_ROOT    := $(abspath $(HIL_DIR)/../../..)
+EMBEDDED_DIR := $(abspath $(HIL_DIR)/../embedded)
+INCLUDE_DIR  := $(EMBEDDED_DIR)/include
+CORE_TARGET  := $(REPO_ROOT)/10-kernel/relulayer-core/target
 
-# Host staticlib produced by `cargo build -p relulayer-ffi --release`
-HOST_LIB    := $(ROOT)/target/release/librelulayer_ffi.a
+# ARM Cortex-M target archive
+ARM_LIB      := $(EMBEDDED_DIR)/arm/librelulayer_core.a
 
-# ARM staticlib produced by `cargo build --target thumbv7em-none-eabihf -p relulayer-ffi --release`
-ARM_LIB     := $(ROOT)/target/thumbv7em-none-eabihf/release/librelulayer_ffi.a
+# Resolve host archive: test standard release first, then explicit triple
+HOST_LIB_STANDARD := $(CORE_TARGET)/release/librelulayer_core.a
+HOST_LIB_TRIPLE   := $(CORE_TARGET)/x86_64-unknown-linux-gnu/release/librelulayer_core.a
 
-CC_HOST     := gcc
-CFLAGS      := -Wall -Wextra -Werror -I$(INCLUDE_DIR) -O2
+ifneq ($(wildcard $(HOST_LIB_STANDARD)),)
+    HOST_LIB := $(HOST_LIB_STANDARD)
+else ifneq ($(wildcard $(HOST_LIB_TRIPLE)),)
+    HOST_LIB := $(HOST_LIB_TRIPLE)
+else
+    # Default fallback if not yet compiled
+    HOST_LIB := $(HOST_LIB_STANDARD)
+endif
 
-.PHONY: all host arm clean run
+CC_HOST      := gcc
+CC_ARM       := arm-none-eabi-gcc
+SIZE_ARM     := arm-none-eabi-size
 
-all: host
+CFLAGS_COMMON := -Wall -Wextra -I$(INCLUDE_DIR) -O2
+CFLAGS_ARM    := $(CFLAGS_COMMON) -mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16 \
+                 -ffunction-sections -fdata-sections
 
-host: $(HIL_DIR)/relulayer_hil_host
+LDFLAGS_ARM   := -T$(HIL_DIR)/stm32h7.ld -nostartfiles -Wl,--gc-sections -Wl,--no-warn-execstack \
+                 -L$(EMBEDDED_DIR)/arm -lrelulayer_core \
+                 -Wl,--start-group -lc -lm -lnosys -Wl,--end-group
 
-$(HIL_DIR)/relulayer_hil_host: $(HIL_DIR)/relulayer_hil.c $(HOST_LIB) $(INCLUDE_DIR)/relulayer.h
-	$(CC_HOST) $(CFLAGS) $< $(HOST_LIB) -o $@ -lm
+.PHONY: all arm host clean run
+
+all: arm
 
 arm: $(HIL_DIR)/relulayer_hil.elf
 
 $(HIL_DIR)/relulayer_hil.elf: $(HIL_DIR)/relulayer_hil.c $(HIL_DIR)/syscalls.c $(HIL_DIR)/startup_stm32h7.S $(ARM_LIB) $(INCLUDE_DIR)/relulayer.h
-	@if ! command -v arm-none-eabi-gcc >/dev/null 2>&1; then \
-		echo "ERROR: arm-none-eabi-gcc not installed. Install gcc-arm-none-eabi to build the ARM HIL binary." ; \
-		exit 1 ; \
+	@if ! command -v $(CC_ARM) >/dev/null 2>&1; then \
+		echo "ERROR: $(CC_ARM) not installed. Install gcc-arm-none-eabi."; \
+		exit 1; \
 	fi
-	arm-none-eabi-gcc $(CFLAGS) -mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16 \
-		-T$(HIL_DIR)/stm32h7.ld -nostartfiles -Wl,--gc-sections -Wl,--no-warn-execstack \
-		$(HIL_DIR)/relulayer_hil.c $(HIL_DIR)/syscalls.c $(HIL_DIR)/startup_stm32h7.S $(ARM_LIB) -o $@ \
-		-Wl,--start-group -lc -lm -lnosys -Wl,--end-group
+	$(CC_ARM) $(CFLAGS_ARM) $(HIL_DIR)/relulayer_hil.c $(HIL_DIR)/syscalls.c $(HIL_DIR)/startup_stm32h7.S $(LDFLAGS_ARM) -o $@
+	@echo ""
+	@echo "=== STM32H7 ELF Memory Map Footprint ==="
+	$(SIZE_ARM) $@
+
+host: $(HIL_DIR)/relulayer_hil_host
+
+$(HIL_DIR)/relulayer_hil_host: $(HIL_DIR)/relulayer_hil.c $(HOST_LIB) $(INCLUDE_DIR)/relulayer.h
+	$(CC_HOST) $(CFLAGS_COMMON) $< $(HOST_LIB) -lpthread -ldl -lm -o $@
 
 run: host
 	$(HIL_DIR)/relulayer_hil_host

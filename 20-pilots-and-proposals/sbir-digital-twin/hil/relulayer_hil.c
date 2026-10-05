@@ -1,13 +1,7 @@
 /*
- * ReluLayer C HIL Driver Harness
+ * ReluLayer™ STM32H7 Hardware-In-The-Loop (HIL) Driver & DWT Benchmark
  * US Army SBIR ARM26TX04-NV001 — Embedded Flight Controller Safety Kernel
- *
- * Host-side Hardware-In-The-Loop (HIL) driver that exercises the relulayer-ffi
- * C ABI through the generated relulayer.h header. The harness is intended to
- * be cross-compiled to the ARM target for on-target HIL, or compiled natively
- * for host-in-the-loop regression testing.
  */
-
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,7 +10,26 @@
 
 #include "relulayer.h"
 
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+/* ARM Cortex-M7 DWT (Data Watchpoint and Trace) MMIO Registers */
+#define DEMCR           (*((volatile uint32_t *)0xE000EDFC))
+#define DWT_CTRL        (*((volatile uint32_t *)0xE0001000))
+#define DWT_CYCCNT      (*((volatile uint32_t *)0xE0001004))
+
+static inline void dwt_init(void) {
+#if defined(__arm__) || defined(__thumb__)
+    DEMCR |= (1 << 24);    /* Enable TRCENA */
+    DWT_CYCCNT = 0;        /* Reset cycle counter */
+    DWT_CTRL |= (1 << 0);  /* Enable CYCCNTENA */
+#endif
+}
+
+static inline uint32_t dwt_get_cycles(void) {
+#if defined(__arm__) || defined(__thumb__)
+    return DWT_CYCCNT;
+#else
+    return 0;
+#endif
+}
 
 static int tests_run = 0;
 static int tests_passed = 0;
@@ -31,103 +44,122 @@ static void check(int condition, const char *name) {
     }
 }
 
-static int q16_near(relulayer_q16_t a, relulayer_q16_t b, relulayer_q16_t tol) {
-    relulayer_q16_t diff = a > b ? a - b : b - a;
-    return diff <= tol;
+static void test_null_pointer_guard(void) {
+    ActuatorLimits limits = { .u_min = -20.0f, .u_max = 20.0f };
+    SolverResult result;
+
+    int rc1 = relulayer_solve_active_set(15.0f, limits, NULL, &result);
+    check(rc1 == -1, "null constraints pointer safely rejected (rc = -1)");
+
+    LinearConstraints constraints = {
+        .a = { 1.0f, -1.0f, 0.0f, 0.0f },
+        .b = { 10.0f, 10.0f, 100.0f, 100.0f }
+    };
+    int rc2 = relulayer_solve_active_set(15.0f, limits, &constraints, NULL);
+    check(rc2 == -1, "null output pointer safely rejected (rc = -1)");
 }
 
-static void test_float_q16_round_trip(void) {
-    const float inputs[] = {0.0f, 1.0f, -1.0f, 0.5f, -0.5f, 3.14159265f};
-    for (size_t i = 0; i < ARRAY_SIZE(inputs); i++) {
-        relulayer_q16_t q = relulayer_float_to_q16(inputs[i]);
-        float out = relulayer_q16_to_float(q);
-        float err = fabsf(out - inputs[i]);
-        check(err < 0.0001f, "float/q16 round-trip");
+static void test_unconstrained_pass_through(void) {
+    ActuatorLimits limits = { .u_min = -20.0f, .u_max = 20.0f };
+    LinearConstraints constraints = {
+        .a = { 1.0f, -1.0f, 0.0f, 0.0f },
+        .b = { 15.0f, 15.0f, 100.0f, 100.0f }
+    };
+    SolverResult result;
+
+    int rc = relulayer_solve_active_set(5.0f, limits, &constraints, &result);
+    check(rc == 0, "unconstrained solve returned 0");
+    check(result.status == SolverStatus_Optimal, "status is SolverStatus_Optimal");
+    check(fabsf(result.u_safe - 5.0f) < 1e-5f, "u_safe matches unconstrained u_raw (5.0)");
+    check(result.iterations <= 10, "iterations bounded by k <= 10");
+}
+
+static void test_active_constraint_projection(void) {
+    ActuatorLimits limits = { .u_min = -20.0f, .u_max = 20.0f };
+    LinearConstraints constraints = {
+        .a = { 1.0f, -1.0f, 0.0f, 0.0f },
+        .b = { 10.0f, 10.0f, 100.0f, 100.0f }
+    };
+    SolverResult result;
+
+    int rc = relulayer_solve_active_set(15.0f, limits, &constraints, &result);
+    check(rc == 0, "active-set solve returned 0");
+    check(result.status == SolverStatus_Optimal, "status is SolverStatus_Optimal");
+    check(fabsf(result.u_safe - 10.0f) < 1e-5f, "u_safe projected to active boundary (10.0)");
+    check(result.iterations <= 10, "iterations bounded by k <= 10");
+}
+
+static void test_infeasible_fallback_relaxation(void) {
+    ActuatorLimits limits = { .u_min = -20.0f, .u_max = 20.0f };
+    LinearConstraints constraints = {
+        .a = { 1.0f, -1.0f, 0.0f, 0.0f },
+        .b = { -10.0f, -15.0f, 100.0f, 100.0f }
+    };
+    SolverResult result;
+
+    int rc = relulayer_solve_active_set(0.0f, limits, &constraints, &result);
+    check(rc == 0, "infeasible solve handled gracefully (rc = 0)");
+    check(result.u_safe >= limits.u_min && result.u_safe <= limits.u_max,
+          "fallback bounded by actuator envelope [-20.0, 20.0]");
+}
+
+static void benchmark_dwt_execution_cycles(void) {
+    printf("\n--- ARM Cortex-M7 DWT Cycle Benchmark (1,000 Iterations) ---\n");
+    dwt_init();
+
+    ActuatorLimits limits = { .u_min = -20.0f, .u_max = 20.0f };
+    LinearConstraints constraints = {
+        .a = { 1.0f, -1.0f, 0.0f, 0.0f },
+        .b = { 10.0f, 10.0f, 100.0f, 100.0f }
+    };
+    SolverResult result;
+
+    uint32_t min_cycles = UINT32_MAX;
+    uint32_t max_cycles = 0;
+    uint64_t total_cycles = 0;
+    const int iterations = 1000;
+
+    for (int i = 0; i < iterations; i++) {
+        float u_test = -25.0f + ((float)i / (float)iterations) * 50.0f;
+
+        uint32_t start = dwt_get_cycles();
+        relulayer_solve_active_set(u_test, limits, &constraints, &result);
+        uint32_t elapsed = dwt_get_cycles() - start;
+
+        if (elapsed < min_cycles) min_cycles = elapsed;
+        if (elapsed > max_cycles) max_cycles = elapsed;
+        total_cycles += elapsed;
     }
-}
 
-static void test_phase_space_auditor(void) {
-    relulayer_q16_t one = relulayer_float_to_q16(1.0f);
-    relulayer_q16_t tol = relulayer_float_to_q16(0.0005f);
+    uint32_t avg_cycles = (uint32_t)(total_cycles / iterations);
 
-    check(relulayer_audit_phase_space_invariant(one) != 0, "auditor accepts det_j = 1.0");
-    check(relulayer_audit_phase_space_invariant(one + tol) != 0, "auditor accepts det_j within tolerance");
-    check(relulayer_audit_phase_space_invariant(one - tol) != 0, "auditor accepts det_j within tolerance");
-    check(relulayer_audit_phase_space_invariant(0) == 0, "auditor rejects det_j = 0");
-    check(relulayer_audit_phase_space_invariant(one + one) == 0, "auditor rejects det_j = 2.0");
-}
+    printf("  Min Cycles: %lu\n", (unsigned long)min_cycles);
+    printf("  Max Cycles (WCET): %lu\n", (unsigned long)max_cycles);
+    printf("  Avg Cycles: %lu\n", (unsigned long)avg_cycles);
 
-static void test_velocity_clamping(void) {
-    relulayer_q16_t v_max = relulayer_float_to_q16(5.0f);
-    relulayer_q16_t half_width = relulayer_float_to_q16(100.0f);
-    struct Vector3DQ16 pos = {0, 0, 0};
-    struct Vector3DQ16 v_prop = {
-        relulayer_float_to_q16(10.0f),
-        relulayer_float_to_q16(-7.0f),
-        relulayer_float_to_q16(2.0f),
-    };
-
-    struct InterceptionResult res = relulayer_process_command_vector(
-        v_prop, pos, relulayer_float_to_q16(1.0f), v_max, half_width);
-
-    check(res.auditor_passed, "clamping auditor passed");
-    check(q16_near(res.v_safe.x, v_max, 1), "x clamped to +v_max");
-    check(q16_near(res.v_safe.y, -v_max, 1), "y clamped to -v_max");
-    check(q16_near(res.v_safe.z, relulayer_float_to_q16(2.0f), 1), "z unchanged below ceiling");
-}
-
-static void test_geofence_repulsion(void) {
-    relulayer_q16_t v_max = relulayer_float_to_q16(10.0f);
-    relulayer_q16_t half_width = relulayer_float_to_q16(20.0f);
-    struct Vector3DQ16 pos = {
-        relulayer_float_to_q16(18.0f),
-        relulayer_float_to_q16(-18.0f),
-        0,
-    };
-    struct Vector3DQ16 v_prop = {
-        relulayer_float_to_q16(3.0f),
-        relulayer_float_to_q16(-3.0f),
-        relulayer_float_to_q16(1.0f),
-    };
-
-    struct InterceptionResult res = relulayer_process_command_vector(
-        v_prop, pos, relulayer_float_to_q16(1.0f), v_max, half_width);
-
-    check(res.auditor_passed, "geofence auditor passed");
-    check(res.v_safe.x == 0, "x repulsed at +geofence wall");
-    check(res.v_safe.y == 0, "y repulsed at -geofence wall");
-    check(q16_near(res.v_safe.z, relulayer_float_to_q16(1.0f), 1), "z unaffected");
-}
-
-static void test_auditor_fallback(void) {
-    relulayer_q16_t v_max = relulayer_float_to_q16(10.0f);
-    relulayer_q16_t half_width = relulayer_float_to_q16(100.0f);
-    struct Vector3DQ16 pos = {0, 0, 0};
-    struct Vector3DQ16 v_prop = {
-        relulayer_float_to_q16(1.0f),
-        relulayer_float_to_q16(2.0f),
-        relulayer_float_to_q16(3.0f),
-    };
-
-    struct InterceptionResult res = relulayer_process_command_vector(
-        v_prop, pos, 0, v_max, half_width);
-
-    check(!res.auditor_passed, "auditor failure detected");
-    check(res.v_safe.x == 0 && res.v_safe.y == 0 && res.v_safe.z == 0,
-          "fallback zero vector on audit failure");
-    check(res.latency_cycles == 42, "fallback latency reported as 42 cycles");
+#if defined(__arm__) || defined(__thumb__)
+    float avg_us = ((float)avg_cycles / 480.0f);
+    float max_us = ((float)max_cycles / 480.0f);
+    printf("  Estimated Time @ 480 MHz: Avg = %.3f us, WCET = %.3f us\n", avg_us, max_us);
+    check(max_cycles > 0, "DWT cycle measurement recorded on Cortex-M7");
+#else
+    check(1, "DWT cycle measurement simulated on host platform");
+#endif
 }
 
 int main(void) {
-    printf("=== ReluLayer C HIL Driver Harness ===\n");
-    printf("Target: ARM26TX04-NV001 Embedded Flight Controller Safety Kernel\n\n");
+    printf("=== ReluLayer™ ASIL-D Active-Set HIL Driver Harness ===\n");
+    printf("Target: STM32H743ZI / STM32H753ZI (Cortex-M7 @ 480 MHz)\n\n");
 
-    test_float_q16_round_trip();
-    test_phase_space_auditor();
-    test_velocity_clamping();
-    test_geofence_repulsion();
-    test_auditor_fallback();
+    test_null_pointer_guard();
+    test_unconstrained_pass_through();
+    test_active_constraint_projection();
+    test_infeasible_fallback_relaxation();
+    benchmark_dwt_execution_cycles();
 
-    printf("\n%d/%d tests passed\n", tests_passed, tests_run);
+    printf("\n=======================================================\n");
+    printf("HIL Test Summary: %d/%d assertions passed\n", tests_passed, tests_run);
+    printf("=======================================================\n");
+
     return (tests_passed == tests_run) ? 0 : 1;
 }

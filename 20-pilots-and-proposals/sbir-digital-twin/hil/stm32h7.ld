@@ -1,9 +1,7 @@
 /*
- * Minimal linker script for STM32H7xx (Cortex-M7) HIL target builds.
- * Adjust memory regions for the specific flight controller (Pixhawk 6X, STM32H743).
- *
- * STM32H743: 2 MB flash @ 0x0800_0000, 1 MB RAM (864 KB main + 192 KB DTCM + 64 KB ITCM).
- * This script keeps only the main AXI SRAM region for simplicity.
+ * Minimal robust linker script for STM32H7xx (Cortex-M7) HIL target builds.
+ * Target: STM32H743ZI / STM32H753ZI / Pixhawk 6X
+ * STM32H743: 2 MB Flash @ 0x0800_0000, 512 KB AXI SRAM @ 0x2400_0000.
  */
 
 MEMORY
@@ -14,38 +12,73 @@ MEMORY
 
 ENTRY(Reset_Handler)
 
+_estack = ORIGIN(RAM) + LENGTH(RAM);
+
 SECTIONS
 {
     .text :
     {
+        . = ALIGN(4);
         KEEP(*(.vectors))
+        *(.text)
         *(.text*)
+        *(.glue_7)
+        *(.glue_7t)
+        *(.eh_frame)
+        KEEP(*(.init))
+        KEEP(*(.fini))
+        . = ALIGN(4);
+        _etext = .;
+    } > FLASH
+
+    .rodata :
+    {
+        . = ALIGN(4);
+        *(.rodata)
         *(.rodata*)
         . = ALIGN(4);
     } > FLASH
+
+    .ARM.extab :
+    {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } > FLASH
+
+    .ARM.exidx :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > FLASH
+
+    _sidata = LOADADDR(.data);
 
     .data :
     {
         . = ALIGN(4);
         _sdata = .;
+        *(.data)
         *(.data*)
         . = ALIGN(4);
         _edata = .;
     } > RAM AT > FLASH
 
-    _sidata = LOADADDR(.data);
-
     .bss :
     {
         . = ALIGN(4);
         _sbss = .;
+        __bss_start__ = _sbss;
+        *(.bss)
         *(.bss*)
         *(COMMON)
         . = ALIGN(4);
         _ebss = .;
-        _end = .;
-        PROVIDE(end = .);
+        __bss_end__ = _ebss;
     } > RAM
+
+    . = ALIGN(8);
+    _end = .;
+    PROVIDE(end = .);
 
     /DISCARD/ :
     {
