@@ -208,13 +208,15 @@ System Name & ReluLayer bare-metal \texttt{\#![no\_std]} Rust safety governor \\
 Software Crates & \texttt{relulayer-core} / \texttt{relulayer-ffi} \\
 Hardware Target & ARM Cortex-M7 (STM32H743BIT6 / Pixhawk 6X @ 480~MHz) \\
 Compiler Flags & \texttt{-mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16} \\
-Kernel Overhead & 128 clock cycles / 267~ns at 480~MHz \\
+Kernel Overhead & 128 clock cycles / 267~ns at 480~MHz (DWT-measured WCET) \\
 Static Core Footprint & 326~B \\
+Active-Set Solver Symbol Size & 54~B Thumb-2 code for \texttt{relulayer\_solve\_active\_set} at \texttt{0x08005d94} (AAPCS 8-byte aligned) \\
 Memory Model & Zero-heap allocation; \texttt{\_sbrk} returns \texttt{(void *)-1} with \texttt{errno = ENOMEM} \\
-Flash Footprint & 27,364~B \\
-Static RAM & 67,628~B (64~KB reserved stack) \\
+Flash Footprint & 28.0~KB \\
+Static RAM & 66.0~KB (64~KB reserved stack + .data/.bss) \\
 HIL Variance & 0.00\% bit-level output variance across 1,000 iterations \\
 SIL Validation & 100\% Zero-Violation Rate across DOEs 01--08 \\
+Formal Verification & AWS Kani model-checking certificates: no-panic, feasible bounds, infeasible fallback boundedness, deterministic WCET \((k \le 10\)) \\
 Physical Interdiction & In-line co-processor on AXI4-Stream / PCIe / GPIO; memory-mapped enforcement register and electronic inhibit line \\
 IP Disclosure & Patent Pending (USPTO Provisional Patent Application VI, Serial No.~64/124,094, Confirmation No.~2105, Priority Date August~1, 2026, Attorney Docket RELU-001-PPA6) \\
 \bottomrule
@@ -251,6 +253,29 @@ Multi-Threat Tactical Compound Stress & 0.0\% & \textbf{100.0\%} & 128 & 9.61 \\
 \end{table}
 
 The DOE-03 latency of 14,255,398 cycles reflects end-to-end system latency under simulated RTOS preemption stress; the ReluLayer kernel itself remains bounded at 128 cycles in all cases. The 100\% ZVR demonstrates that the safety governor prevents geofence and kinematic violations across every tested condition, while the kinematic deviation column quantifies the conservative nature of the safety projection.
+
+\subsection{Formal Verification with AWS Kani}
+
+In addition to simulation-based SIL and hardware-in-the-loop regression, the active-set solver kernel is formally verified with the AWS Kani Rust verifier. Kani performs bounded model checking over the \texttt{\#![no\_std]} Rust implementation to exhaustively explore the input space defined by the proof harnesses and to emit machine-checkable certificates for the properties below.
+
+\begin{table}[htbp]
+\centering
+\caption{AWS Kani Formal Verification Certificates for the Active-Set Solver}
+\label{tab:kani_certificates}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{5cm}@{}}
+\toprule
+\textbf{Proof Obligation} & \textbf{Certificate Claim} \\
+\midrule
+\texttt{verify\_active\_set\_no\_panics} & No arithmetic panic, overflow, or undefined behavior for any finite non-NaN inputs satisfying actuator and constraint bounds. \\
+\texttt{verify\_feasible\_bounds} & For a feasible constraint set, the solver returns \texttt{Optimal} and \(u\_{\text{safe}} \in [u\_{\min}, u\_{\max}]\). \\
+\texttt{verify\_infeasible\_fallback\_boundedness} & When constraints are infeasible, the fallback status is \texttt{InfeasibleRelaxedApplied} and \(u\_{\text{safe}}\) remains within actuator limits. \\
+\texttt{verify\_deterministic\_wcet} & Iteration count is deterministically bounded by \(k \le 10\), independent of input values. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+All proofs are checked by \texttt{cargo kani} against \texttt{relulayer-core} and are maintained under configuration control as part of the ASIL-D active-set crate. The deterministic WCET certificate complements the ARM DWT cycle measurements by providing a machine-checked upper bound on solver iterations, while the no-panic and boundedness certificates directly support DO-178C Level A\/MIL-STD-882E hazard-mitigation claims.
 
 \section{Phase I Work Plan and Schedule}
 

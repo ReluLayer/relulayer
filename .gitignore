@@ -24,3 +24,12 @@ relulayer_hil_host
 test_c_abi
 test_c_abi.c
 apply_hil_fixes_and_build.sh
+
+# LaTeX build intermediates
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
