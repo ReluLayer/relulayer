@@ -6,8 +6,10 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_shell/ffi/bindings.dart';
 
-/// Immutable snapshot containing verified telemetric parameters 
-/// fully decoupled from native C-ABI pointers. Safe for UI rendering.
+/// Immutable snapshot containing verified telemetric parameters and the
+/// projected safe command from the ReLULayer active-set solver.
+///
+/// Fully decoupled from native C-ABI pointers and safe for UI rendering.
 class TelemetryState {
   final String damageType;
   final int count;
@@ -17,6 +19,11 @@ class TelemetryState {
   final double longitude;
   final List<int> attestationToken;
 
+  // ReLULayer active-set solver outputs
+  final double uSafe;
+  final int iterations;
+  final SolverStatus solverStatus;
+
   TelemetryState({
     required this.damageType,
     required this.count,
@@ -25,6 +32,9 @@ class TelemetryState {
     required this.latitude,
     required this.longitude,
     required this.attestationToken,
+    required this.uSafe,
+    required this.iterations,
+    required this.solverStatus,
   });
 }
 
@@ -37,16 +47,28 @@ class _IngestionTask {
   final List<int> token;
   final List<int> signature;
 
+  // Inputs to the active-set solver
+  final double uRaw;
+  final double uMin;
+  final double uMax;
+  final List<double> constraintA;
+  final List<double> constraintB;
+
   _IngestionTask({
     required this.payloadText,
     required this.lat,
     required this.lon,
     required this.token,
     required this.signature,
+    required this.uRaw,
+    required this.uMin,
+    required this.uMax,
+    required this.constraintA,
+    required this.constraintB,
   });
 }
 
-/// Architectural Coordinator layer transforming raw binary FFI buffers 
+/// Architectural Coordinator layer transforming raw binary FFI buffers
 /// into reactive, change-notified UI state snapshots via background Isolates.
 class TelemetryCoordinator extends ChangeNotifier {
   TelemetryState? _latestState;
@@ -58,7 +80,7 @@ class TelemetryCoordinator extends ChangeNotifier {
   /// Exposes the processing state flag to drive UI loading indicators.
   bool get isProcessing => _isProcessing;
 
-  /// Ingests parameters, offloads the cryptographic engine workload to an isolated 
+  /// Ingests parameters, offloads the cryptographic engine workload to an isolated
   /// background OS thread, and updates the reactive tree upon completion.
   Future<void> processIncomingStream({
     required String payloadText,
@@ -66,6 +88,11 @@ class TelemetryCoordinator extends ChangeNotifier {
     required double lon,
     required List<int> token,
     required List<int> signature,
+    required double uRaw,
+    required double uMin,
+    required double uMax,
+    required List<double> constraintA,
+    required List<double> constraintB,
   }) async {
     // Prevent overlapping execution transactions
     if (_isProcessing) return;
@@ -79,10 +106,15 @@ class TelemetryCoordinator extends ChangeNotifier {
       lon: lon,
       token: token,
       signature: signature,
+      uRaw: uRaw,
+      uMin: uMin,
+      uMax: uMax,
+      constraintA: constraintA,
+      constraintB: constraintB,
     );
 
     try {
-      // Offload the entire 5.15ms execution block to an independent background CPU thread
+      // Offload the entire execution block to an independent background CPU thread
       final TelemetryState? resultState = await Isolate.run(() => _executeIsolatedPipeline(task));
       _latestState = resultState;
     } catch (e) {
@@ -95,10 +127,12 @@ class TelemetryCoordinator extends ChangeNotifier {
   }
 
   /// Top-Level isolated execution block. Runs entirely on a background OS thread.
-  /// Interacts directly with the global process memory space mapping of veristate-core.
+  /// Interacts directly with the global process memory space mapping of veristate-core
+  /// and the verified ReLULayer active-set solver library.
   static TelemetryState? _executeIsolatedPipeline(_IngestionTask task) {
     // Initialize an isolated instance of the unified native dynamic library bridge
     final VeriStateNative nativeBridge = VeriStateNative();
+    final ReluLayerBindings solver = ReluLayerBindings();
     final List<int> rawPayload = task.payloadText.codeUnits;
 
     // 1. Fire execution transaction across into the compiled Rust Core
@@ -115,10 +149,19 @@ class TelemetryCoordinator extends ChangeNotifier {
       return null;
     }
 
+    // 3. Run the verified active-set solver on the isolated thread
+    final SolverOutput output = solver.solveActiveSet(
+      uRaw: task.uRaw,
+      uMin: task.uMin,
+      uMax: task.uMax,
+      constraintA: task.constraintA,
+      constraintB: task.constraintB,
+    );
+
     try {
       final FfiFinding finding = findingPtr.ref;
 
-      // 3. Extract parameter frames into a pure, thread-safe Dart memory snapshot
+      // 4. Extract parameter frames into a pure, thread-safe Dart memory snapshot
       return TelemetryState(
         damageType: finding.damage_type.cast<Utf8>().toDartString(),
         count: finding.count,
@@ -127,9 +170,12 @@ class TelemetryCoordinator extends ChangeNotifier {
         latitude: finding.latitude,
         longitude: finding.longitude,
         attestationToken: List<int>.from(task.token),
+        uSafe: output.uSafe,
+        iterations: output.iterations,
+        solverStatus: output.status,
       );
     } finally {
-      // 4. Memory Protection: Immediate reclamation of heap pointer frames via the Rust allocator
+      // 5. Memory Protection: Immediate reclamation of heap pointer frames via the Rust allocator
       nativeBridge.freeFfiFinding(findingPtr);
     }
   }
@@ -142,7 +188,7 @@ class TelemetryCoordinator extends ChangeNotifier {
       return await Isolate.run(() {
         final VeriStateNative nativeBridge = VeriStateNative();
         // Calls into the C-ABI gateway which invokes dispatch_pending_outbox
-        return nativeBridge.dispatchPendingOutbox(); 
+        return nativeBridge.dispatchPendingOutbox();
       });
     } catch (e) {
       debugPrint("Ledger Sync Isolate Failure: $e");

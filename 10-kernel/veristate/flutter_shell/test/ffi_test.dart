@@ -65,4 +65,20 @@ void main() {
       native.freeFfiFinding(findingPtr);
     }
   });
+
+  test('ReLULayer active-set solver C-ABI projection', () {
+    final solver = ReluLayerBindings();
+
+    final output = solver.solveActiveSet(
+      uRaw: 15.0,
+      uMin: -20.0,
+      uMax: 20.0,
+      constraintA: [1.0, -1.0, 0.0, 0.0],
+      constraintB: [10.0, 10.0, 100.0, 100.0],
+    );
+
+    expect(output.status, SolverStatus.optimal);
+    expect(output.iterations, lessThanOrEqualTo(10));
+    expect((output.uSafe - 10.0).abs(), lessThan(1e-5));
+  });
 }

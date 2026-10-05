@@ -1,6 +1,5 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_shell/ffi/bindings.dart';
@@ -20,15 +19,14 @@ void callbackDispatcher() {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   Workmanager().initialize(
-    callbackDispatcher, 
-    isInDebugMode: true
+    callbackDispatcher,
   );
-  
+
   Workmanager().registerPeriodicTask(
-    "veristate-sync-daemon-v1", 
-    "syncAndPruneDatabase", 
+    "veristate-sync-daemon-v1",
+    "syncAndPruneDatabase",
     frequency: const Duration(minutes: 15),
     constraints: Constraints(
       networkType: NetworkType.connected,
@@ -81,6 +79,23 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
   double _eventCount = 1.0;
   final TextEditingController _locationController = TextEditingController(text: 'Sector_7');
 
+  // ReLULayer active-set solver inputs
+  final TextEditingController _uRawController = TextEditingController(text: '15.0');
+  final TextEditingController _uMinController = TextEditingController(text: '-20.0');
+  final TextEditingController _uMaxController = TextEditingController(text: '20.0');
+  final List<TextEditingController> _constraintAControllers = [
+    TextEditingController(text: '1.0'),
+    TextEditingController(text: '-1.0'),
+    TextEditingController(text: '0.0'),
+    TextEditingController(text: '0.0'),
+  ];
+  final List<TextEditingController> _constraintBControllers = [
+    TextEditingController(text: '10.0'),
+    TextEditingController(text: '10.0'),
+    TextEditingController(text: '100.0'),
+    TextEditingController(text: '100.0'),
+  ];
+
   final List<String> _damageTypes = [
     'CRACKED_FOUNDATION',
     'MISSING_SHINGLES',
@@ -105,12 +120,20 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
         return Future.error('Location permissions denied by user.');
       }
     }
-    
+
     if (permission == LocationPermission.deniedForever) {
       return Future.error('Location permissions are permanently locked.');
-    } 
+    }
 
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    return await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
+    );
+  }
+
+  double _parseControllerValue(TextEditingController controller, double fallback) {
+    return double.tryParse(controller.text.trim()) ?? fallback;
   }
 
   void _triggerLiveIngestion() async {
@@ -129,7 +152,7 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
 
     try {
       final Position position = await _determinePosition();
-      
+
       setState(() {
         _locationStatus = "LOCK ACQUIRED: ±${position.accuracy.toStringAsFixed(1)}m";
       });
@@ -140,10 +163,10 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
       final double lon = position.longitude;
 
       final VeriStateNative localSigner = VeriStateNative();
-      
+
       // 2. Retrieve or generate the genuine hardware-bound seed from the OS Keystore
       final List<int> hardwareSeed = await SecureKeyManager.getOrGenerateSeed();
-      
+
       final List<int> labelBytes = "veristate-manifest-signing-v1".codeUnits;
       final List<int> payloadBytes = livePayload.codeUnits;
 
@@ -155,9 +178,20 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
       );
 
       final List<int> cryptographicallyValidToken = [
-        34, 47, 236, 88, 40, 246, 136, 134, 177, 126, 145, 193, 176, 3, 42, 42, 
+        34, 47, 236, 88, 40, 246, 136, 134, 177, 126, 145, 193, 176, 3, 42, 42,
         7, 132, 203, 71, 212, 61, 72, 194, 134, 213, 111, 121, 50, 120, 238, 213
       ];
+
+      // 4. Collect active-set solver inputs from the UI
+      final double uRaw = _parseControllerValue(_uRawController, 15.0);
+      final double uMin = _parseControllerValue(_uMinController, -20.0);
+      final double uMax = _parseControllerValue(_uMaxController, 20.0);
+      final List<double> constraintA = _constraintAControllers
+          .map((c) => _parseControllerValue(c, 0.0))
+          .toList();
+      final List<double> constraintB = _constraintBControllers
+          .map((c) => _parseControllerValue(c, 100.0))
+          .toList();
 
       await _coordinator.processIncomingStream(
         payloadText: livePayload,
@@ -165,6 +199,11 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
         lon: lon,
         token: cryptographicallyValidToken,
         signature: genuineSignature,
+        uRaw: uRaw,
+        uMin: uMin,
+        uMax: uMax,
+        constraintA: constraintA,
+        constraintB: constraintB,
       );
     } catch (e) {
       debugPrint("Hardware Integration Failure: $e");
@@ -181,7 +220,88 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
   @override
   void dispose() {
     _locationController.dispose();
+    _uRawController.dispose();
+    _uMinController.dispose();
+    _uMaxController.dispose();
+    for (final c in _constraintAControllers) {
+      c.dispose();
+    }
+    for (final c in _constraintBControllers) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  Widget _buildSolverInputCard() {
+    return Card(
+      color: const Color(0xFF1F2937),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'ACTIVE-SET SOLVER PARAMETERS',
+              style: TextStyle(color: Color(0xFF00FFCC), fontWeight: FontWeight.bold, letterSpacing: 1.5),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildNumberField('u_raw', _uRawController),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildNumberField('u_min', _uMinController),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildNumberField('u_max', _uMaxController),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'CONSTRAINT COEFFICIENTS a[4]',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: _constraintAControllers
+                  .map((c) => Expanded(child: _buildNumberField('a', c)))
+                  .toList(),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'CONSTRAINT BOUNDS b[4]',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: _constraintBControllers
+                  .map((c) => Expanded(child: _buildNumberField('b', c)))
+                  .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNumberField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      style: const TextStyle(fontFamily: 'Courier'),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*')),
+      ],
+    );
   }
 
   @override
@@ -200,27 +320,34 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
             child: Container(
               color: const Color(0xFF111827),
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'TELEMETRY PARAMETERS',
-                    style: TextStyle(color: Color(0xFF00FFCC), fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                  ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'TELEMETRY PARAMETERS',
+                      style: TextStyle(color: Color(0xFF00FFCC), fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                    ),
                   const SizedBox(height: 24),
-                  DropdownButtonFormField<String>(
-                    value: _selectedDamage,
+                  InputDecorator(
                     decoration: const InputDecoration(labelText: 'Damage Classification'),
-                    dropdownColor: const Color(0xFF1F2937),
-                    items: _damageTypes.map((String type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type, style: const TextStyle(fontFamily: 'Courier')),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) setState(() => _selectedDamage = newValue);
-                    },
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedDamage,
+                        isExpanded: true,
+                        dropdownColor: const Color(0xFF1F2937),
+                        style: const TextStyle(fontFamily: 'Courier', color: Colors.white),
+                        items: _damageTypes.map((String type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type, style: const TextStyle(fontFamily: 'Courier')),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) setState(() => _selectedDamage = newValue);
+                        },
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -247,10 +374,12 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
                     ),
                     style: const TextStyle(fontFamily: 'Courier'),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 24),
+                  _buildSolverInputCard(),
+                  const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _isFetchingLocation || _coordinator.isProcessing 
-                        ? null 
+                    onPressed: _isFetchingLocation || _coordinator.isProcessing
+                        ? null
                         : _triggerLiveIngestion,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF00FFCC),
@@ -263,8 +392,9 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
                       _isFetchingLocation ? 'AWAITING HARDWARE...' : 'LOCK & INGEST TELEMETRY',
                       style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
                     ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -326,8 +456,21 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
                                 _buildMetricTile('GEOGRAPHIC LATITUDE', state.latitude.toStringAsFixed(8)),
                                 _buildMetricTile('GEOGRAPHIC LONGITUDE', state.longitude.toStringAsFixed(8)),
                                 _buildMetricTile(
-                                  'HARDWARE ATTESTATION TOKEN', 
+                                  'HARDWARE ATTESTATION TOKEN',
                                   state.attestationToken.map((b) => b.toRadixString(16).padLeft(2, '0')).join(' '),
+                                ),
+                                const Divider(color: Colors.grey, height: 32),
+                                const Text(
+                                  'ACTIVE-SET SOLVER OUTPUT',
+                                  style: TextStyle(color: Color(0xFF00FFCC), fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                                ),
+                                const SizedBox(height: 16),
+                                _buildMetricTile('SAFE COMMAND u_safe', state.uSafe.toStringAsFixed(6)),
+                                _buildMetricTile('ITERATIONS k', '${state.iterations}'),
+                                _buildMetricTile(
+                                  'SOLVER STATUS',
+                                  state.solverStatus == SolverStatus.optimal ? 'OPTIMAL' : 'INVALID INPUT',
+                                  isHeader: state.solverStatus == SolverStatus.optimal,
                                 ),
                               ],
                             ),
@@ -386,8 +529,8 @@ class _TelemetryMonitorDashboardState extends State<TelemetryMonitorDashboard> {
           SelectableText(
             value,
             style: TextStyle(
-              color: Colors.white, 
-              fontSize: isHeader ? 28 : 16, 
+              color: Colors.white,
+              fontSize: isHeader ? 28 : 16,
               fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
               fontFamily: 'Courier',
             ),
