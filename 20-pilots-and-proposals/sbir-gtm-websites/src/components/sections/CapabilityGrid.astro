@@ -1,0 +1,78 @@
+---
+const capabilities = [
+  {
+    id: 'safety-kernel',
+    title: 'Memory-Safe Edge & AI Governance',
+    description: 'Bare-metal #![no_std] Rust execution engines that clip unsafe agent actions in 0.199 µs—approximately 5,000x faster than cloud watchdogs.',
+    featured: 'Flagship',
+    icon: 'shield',
+  },
+  {
+    id: 'health-it',
+    title: 'Federal Healthcare IT & Zero-Trust Interop',
+    description: 'Secure, stateless routing of FHIR/HL7, DICOM/PACS, and edge telemetry for CMS, Medicaid, and DHA networks with strict data isolation.',
+    featured: 'New Service',
+    icon: 'heart',
+  },
+  {
+    id: 'optimization',
+    title: 'Operations Research & MILP Optimization',
+    description: 'Large-scale fleet, gate, and resource scheduling models that have yielded $20M–$40M in historical operational savings for global logistics networks.',
+    featured: null,
+    icon: 'graph',
+  },
+  {
+    id: 'refactoring',
+    title: 'Legacy Code Modernization',
+    description: 'Refactoring mission-critical defense and healthcare systems from C/C++/C#/.NET to certifiable, memory-safe Rust.',
+    featured: null,
+    icon: 'chip',
+  },
+];
+
+const iconPaths: Record<string, string> = {
+  shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  heart: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
+  chip: 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2ZM9 9h6v6H9V9Z',
+  graph: 'M3 3v18h18M18 17V9M13 17V5M8 17v-4',
+};
+---
+
+<section id="capabilities" class="py-20 sm:py-24 lg:py-32">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <h2 class="section-heading">Core Capabilities</h2>
+      <p class="mt-4 section-subheading">
+        From bare-metal safety governors to federal Healthcare IT interoperability, we deliver mathematically rigorous, memory-safe systems engineered for mission-critical environments.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {capabilities.map((cap) => (
+        <article class={`group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 ${cap.featured ? 'border-gold/40 bg-gold/5 shadow-gold-glow' : 'border-slate-400/10 bg-slate-800/30 hover:border-slate-400/30'}`}>
+          {cap.featured && (
+            <div class="absolute -right-10 top-6 rotate-45 bg-gold px-10 py-1 text-center">
+              <span class="text-xs font-bold text-navy">Featured</span>
+            </div>
+          )}
+          <div class={`flex h-12 w-12 items-center justify-center rounded-lg ${cap.featured ? 'bg-gold/15 text-gold' : 'bg-slate-700/50 text-slate-300'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d={iconPaths[cap.icon]}></path>
+            </svg>
+          </div>
+          <h3 class="mt-5 text-lg font-bold text-cream group-hover:text-gold transition-colors">
+            {cap.title}
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed text-slate-300">
+            {cap.description}
+          </p>
+          {cap.featured && (
+            <div class="mt-5">
+              <span class="technical-badge">{cap.featured}</span>
+            </div>
+          )}
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

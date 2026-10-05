@@ -1,0 +1,156 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'Contested EW Flight Envelope Protection for Tactical UAS';
+const description = 'Dual-use bare-metal #![no_std] Rust flight guardrail for tactical defense UAS and commercial BVLOS drone fleets operating in GPS-jammed, SATCOM-denied, and electronic warfare environments.';
+const canonical = 'https://atelierlogicgroup.com/contested-ew-drone-guardrail/';
+
+const keywords = [
+  'contested EW autonomous flight envelope protection',
+  'counter-GPS drone safety governor on-chip',
+  'Starlink jamming resilient flight guardrail',
+];
+
+const scenarios = [
+  {
+    title: 'GPS/GNSS Denial',
+    body: 'When position, velocity, or time solutions become untrustworthy, ReluLayer™ maintains last-known-good kinematic bounds and prevents the flight controller from commanding outside the envelope.',
+  },
+  {
+    title: 'SATCOM / Starlink Blinding',
+    body: 'Loss of beyond-line-of-sight C2 does not disable the safety governor. The kernel runs entirely on-chip, enforcing flight envelope limits without cloud or RF dependency.',
+  },
+  {
+    title: 'Adversarial RF Spoofing',
+    body: 'Injected false waypoints or commands are treated as untrusted client outputs. ReluLayer™ projects each vector onto the safe polyhedral set before it reaches actuators.',
+  },
+  {
+    title: 'Contested C2 Degradation',
+    body: 'The deterministic 0.199 µs loop continues to operate during partial or total primary command-link degradation, giving operators time to recover safe control.',
+  },
+];
+---
+
+<BaseLayout pageType="corporate" title={title} description={description} canonical={canonical}>
+  <section class="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-28 lg:pt-32 lg:pb-36">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.12),_transparent_50%)]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(51,65,85,0.25),_transparent_50%)]"></div>
+
+    <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl">
+        <div class="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5">
+          <span class="flex h-2 w-2 rounded-full bg-gold animate-pulse-gold"></span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-gold">NAVAIR · AFWERX · DEVCOM · Tactical UAS</span>
+        </div>
+
+        <h1 class="mt-6 text-3xl font-extrabold tracking-tight text-cream sm:text-5xl md:text-6xl text-balance">
+          Contested EW Flight Envelope Protection for Tactical UAS
+        </h1>
+
+        <p class="mt-6 max-w-3xl text-lg text-slate-300 sm:text-xl md:text-2xl">
+          A bare-metal
+          <code class="rounded bg-slate-800/90 px-1.5 py-0.5 font-mono text-gold">#![no_std]</code>
+          Rust flight guardrail that keeps tactical UAS inside safe kinematic limits during GPS jamming, SATCOM loss, and electronic warfare.
+        </p>
+
+        <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+          <a href="https://atelierlogicgroup.com/#sblo-form" class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+            Request CISA Audit & SDK Briefing
+          </a>
+          <a href="https://relulayer.ai/" class="btn-secondary">
+            View Technical Specs
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20 lg:py-24 bg-slate-900/50 border-y border-slate-800">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <h2 class="section-heading">Resilient by Design, Not by Connectivity</h2>
+        <p class="mt-4 section-subheading">
+          ReluLayer™ operates entirely on the MCU, so it maintains deterministic flight envelope protection even when RF, SATCOM, or GPS are contested or denied.
+        </p>
+      </div>
+
+      <div class="mt-14 grid gap-6 sm:grid-cols-2">
+        {scenarios.map((item) => (
+          <article class="rounded-2xl border border-slate-400/10 bg-slate-800/30 p-6">
+            <h3 class="text-lg font-bold text-cream">{item.title}</h3>
+            <p class="mt-3 text-sm leading-relaxed text-slate-300">{item.body}</p>
+          </article>
+        ))}
+      </div>
+
+      <div class="mt-14 rounded-2xl border border-gold/20 bg-gold/5 p-8">
+        <h3 class="text-xl font-bold text-cream">On-Chip Determinism</h3>
+        <p class="mt-3 text-slate-300">
+          No cloud, no ML inference, no dynamic allocation. The 326-byte kernel runs in a single bounded loop on the flight MCU, making it inherently resilient to EW-induced communication loss.
+        </p>
+        <ul class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-slate-300">
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true"></span>
+            0.199 µs WCET
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true"></span>
+            Zero dynamic heap allocation
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true"></span>
+            No RF or SATCOM dependency
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true"></span>
+            C ABI ready for Pixhawk integration
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 sm:py-20 lg:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <h2 class="section-heading">Target Search Intent</h2>
+        <p class="mt-4 section-subheading">
+          Engineered for NAVAIR, AFWERX, Army DEVCOM, and tactical UAS program offices searching for EW-resilient flight safety.
+        </p>
+      </div>
+
+      <div class="mt-10 flex flex-wrap gap-3">
+        {keywords.map((kw) => (
+          <span class="technical-badge">{kw}</span>
+        ))}
+      </div>
+
+      <div class="mt-14 rounded-2xl border border-gold/20 bg-gold/5 p-8 sm:p-12">
+        <h3 class="text-2xl font-bold text-cream">Prepare Your Tactical UAS for Contested EW</h3>
+        <p class="mt-4 text-lg text-slate-300">
+          Contact Atelier Logic Group LLC to review integration options, timing traces, and export control guidance for EW-resilient UAS programs.
+        </p>
+        <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+          <a href="mailto:proposals@atelierlogicgroup.com" class="btn-primary">
+            Email proposals@atelierlogicgroup.com
+          </a>
+          <a href="https://atelierlogicgroup.com/capability-statement/" class="btn-secondary">
+            View Capability Statement
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

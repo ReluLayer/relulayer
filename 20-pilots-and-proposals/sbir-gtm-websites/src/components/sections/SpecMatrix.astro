@@ -1,0 +1,78 @@
+---
+const specs = [
+  {
+    category: 'Performance',
+    items: [
+      { metric: 'Worst-Case Execution Time', value: '0.199 µs', detail: 'Sub-microsecond deterministic clipping' },
+      { metric: 'Clock Frequency Reference', value: '480 MHz', detail: 'ARM Cortex-M7 / STM32H7 class' },
+      { metric: 'Memory Footprint', value: '326 bytes', detail: 'Deterministic stack + static buffers' },
+    ],
+  },
+  {
+    category: 'CISA Memory-Safety Compliance',
+    items: [
+      { metric: 'Language & Runtime', value: 'Bare-Metal Rust', detail: '#![no_std], no standard library, no hidden allocator' },
+      { metric: 'Dynamic Heap Allocation', value: 'Zero', detail: 'guaranteed zero alloc/heap dependency; no malloc/free path' },
+      { metric: 'Buffer Overflow / Memory Leak Risk', value: '0%', detail: 'Ownership + borrow checker at compile time' },
+      { metric: 'Memory Safety Standard', value: 'CISA Compliant', detail: 'Aligns with ONCD, CISA, and NSA memory-safety directives' },
+    ],
+  },
+  {
+    category: 'ACCSE™ Tier 2 — Counter-Swarm Intelligence',
+    items: [
+      { metric: 'Greedy Centrality Cut-Node Search', value: '10.7 ms', detail: '123 KB SRAM · 0.9993 ARI partition accuracy' },
+      { metric: 'Hungarian Target Allocator', value: '27.9 µs', detail: '97.08% allocation optimality' },
+      { metric: 'Contested EW State Machine', value: 'Evidential Dirichlet Filter', detail: 'Active Mode when α < 0.30; Passive Mode when α ≥ 0.30' },
+    ],
+  },
+  {
+    category: 'Integration',
+    items: [
+      { metric: 'Register Interface', value: 'Memory-Mapped', detail: 'Volatile MMIO with explicit barriers' },
+      { metric: 'C ABI Header', value: 'relulayer.h', detail: 'No-mangle extern "C" exports' },
+      { metric: 'Build Targets', value: 'ARM / RISC-V / FPGA', detail: 'Cortex-M7, STM32H7, AXI4-Stream' },
+    ],
+  },
+];
+---
+
+<section class="py-16 sm:py-20">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <h2 class="section-heading">Hardened Specification Matrix</h2>
+      <p class="mt-4 section-subheading">
+        ReluLayer is dimensioned for safety-critical flight stacks where every cycle and every byte are accountable.
+      </p>
+    </div>
+
+    <div class="mt-12 space-y-8">
+      {specs.map((group) => (
+        <div class="overflow-hidden rounded-2xl border border-slate-400/10 bg-slate-800/30">
+          <div class="border-b border-slate-400/10 bg-slate-800/60 px-6 py-4">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-gold">{group.category}</h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="sr-only">
+                <tr>
+                  <th>Metric</th>
+                  <th>Value</th>
+                  <th>Detail</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-400/10">
+                {group.items.map((item) => (
+                  <tr class="hover:bg-slate-700/20 transition-colors">
+                    <td class="px-6 py-4 text-sm font-medium text-slate-300">{item.metric}</td>
+                    <td class="px-6 py-4 font-mono text-sm font-semibold text-gold">{item.value}</td>
+                    <td class="px-6 py-4 text-sm text-slate-400">{item.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

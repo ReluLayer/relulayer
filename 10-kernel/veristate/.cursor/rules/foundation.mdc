@@ -1,0 +1,30 @@
+---
+description: "Foundational project engineering guardrails, static analysis mandates, multi-target compilation rules, and structural environment invariants."
+globs: ["*"]
+alwaysApply: true
+---
+
+# VeriState Global System Governance & Technical Invariants
+
+> **Canonical entity identity:** `AtelierLogicGroup/00-governance/entity-identity.md`.
+> Any edits to UEI, CAGE, NAICS, PSC, patent serials, or addresses must be synchronized with that file.
+
+## 1. Mandatory Rate-Limiting Protocol
+
+- **Operational Constraint:** The execution workspace runs within a highly restrictive project volume envelope (< 4 requests per minute).
+- **Enforcement:** All external LLM and API calls must route through the shared `RateLimiter` in `ReluLayer/30-tools-and-ops/relulayer-engine/orchestration/rate_limiter.py`.
+  - Use the `ollama_local` provider policy by default: 30-second minimum interval, 2 concurrent calls, 4 calls per minute.
+  - For non-LLM external APIs (e.g., web services), configure a separate provider with an appropriate policy.
+- **No verbal pauses:** Do not print placeholder status strings like "30-second rate limit cleared." The RateLimiter enforces the pause in code.
+
+## 2. Anti-Bloat Version Control & Repository Isolation
+
+- **Operational Constraint:** Maintain a lean, high-integrity project architecture. Completely shield local target compilation output trees from entering version tracking modules.
+- **Forbidden Actions:**
+  - NEVER execute, suggest, or stage code commits using unmanaged catch-all parameters: `git add .`, `git add -A`, or `git add *`.
+  - NEVER allow `target/` build directories, transient compilation caches, or compiled dynamic binaries (`.dll`, `.so`, `.dylib`) to enter the staging area.
+- **Enforcement Command Sequence:** Following an isolated feature verification success, local tracking updates must target explicit structural paths exclusively:
+  ```bash
+  git add veristate-core/src/some_module.rs veristate-core/Cargo.toml
+  git commit -m "iteration: [Target Module] - [Specific Isolated Functional Delta]"
+  ```

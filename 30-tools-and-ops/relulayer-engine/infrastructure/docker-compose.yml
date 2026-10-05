@@ -1,0 +1,19 @@
+services:
+  engine-backend:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile
+    command: ["python", "-m", "uvicorn", "orchestration.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ../:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434

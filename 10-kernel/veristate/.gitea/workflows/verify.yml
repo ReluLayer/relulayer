@@ -1,0 +1,54 @@
+name: VeriState Core Audit
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  audit-rust-core:
+    name: Rust Core (Memory & Cryptography)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./veristate-core
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Provision Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.90.0
+
+      - name: Execute Red/Green Verification Loop
+        run: cargo test --verbose
+
+      - name: Verify FFI Compilation
+        run: cargo build --release
+
+  audit-flutter-shell:
+    name: Flutter Shell (Presentation & Isolation)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./flutter_shell
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Provision Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.24.x'
+
+      - name: Fetch Dependencies
+        run: flutter pub get
+
+      - name: Enforce Strict Dart Analysis
+        run: flutter analyze
+
+      - name: Execute UI Widget Tests
+        run: flutter test

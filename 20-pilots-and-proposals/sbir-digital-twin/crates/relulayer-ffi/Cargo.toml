@@ -1,0 +1,12 @@
+[package]
+name = "relulayer-ffi"
+version = "0.1.0"
+edition = "2021"
+authors = ["Atelier Logic Group LLC"]
+
+[lib]
+name = "relulayer_ffi"
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+relulayer-core = { path = "../relulayer-core" }

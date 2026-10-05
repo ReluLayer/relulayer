@@ -1,0 +1,65 @@
+---
+const rows = [
+  {
+    claim: 'Freeze-proof code',
+    proof: '#![no_std] Rust, zero dynamic heap allocation (guaranteed zero alloc/heap dependency)',
+    artifact: 'Memory-safety audit / CISA aligned',
+  },
+  {
+    claim: 'Sub-microsecond safety response',
+    proof: '0.199 µs WCET @ 480 MHz',
+    artifact: 'Timing trace on STM32H7',
+  },
+  {
+    claim: 'Certifiable for flight-critical use',
+    proof: 'RTCA DO-178C DAL A, MIL-STD-882E process alignment',
+    artifact: 'Safety case roadmap',
+  },
+  {
+    claim: 'Decentralized asymmetric swarm interdiction',
+    proof: 'ACCSE™ Tier 2: Greedy Centrality 0.9993 ARI / 10.7 ms / 123 KB; Hungarian 27.9 µs / 97.08%; Evidential Dirichlet Active/Passive gating at α = 0.30',
+    artifact: 'USPTO Serial No. 64/127,611 (PPA VII; PPA I–VI continuity)',
+  },
+  {
+    claim: 'Deterministic safe-state enforcement',
+    proof: 'ReluLayer™ Tier 1: 326 B footprint, zero heap, 0.00% HIL bit-level variance across 5,000 passes',
+    artifact: 'Hardware-in-the-loop report',
+  },
+];
+---
+
+<section id="translation-matrix" class="py-20 sm:py-24 lg:py-32">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <h2 class="section-heading">Business-to-Technical Translation Matrix</h2>
+      <p class="mt-4 section-subheading">
+        Every business claim is backed by measurable engineering evidence and certifiable artifacts.
+      </p>
+    </div>
+
+    <div class="mt-12 overflow-hidden rounded-2xl border border-slate-400/10 bg-slate-800/30">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-slate-800/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <tr>
+              <th class="px-6 py-4">Business Claim</th>
+              <th class="px-6 py-4">Engineering Proof</th>
+              <th class="px-6 py-4">Artifact / Standard</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-400/10">
+            {rows.map((row) => (
+              <tr class="hover:bg-slate-700/20 transition-colors">
+                <td class="px-6 py-5 text-sm font-semibold text-cream">{row.claim}</td>
+                <td class="px-6 py-5 text-sm text-slate-300">
+                  <code class="font-mono text-gold">{row.proof}</code>
+                </td>
+                <td class="px-6 py-5 text-sm text-slate-400">{row.artifact}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,9 @@
+# Typo domain redirect
+https://relualayer.com/* https://relulayer.ai/:splat 301!
+https://www.relualayer.com/* https://relulayer.ai/:splat 301!
+
+# Also support redirecting /relulayer on main site to relulayer.ai
+/relulayer/* https://relulayer.ai/:splat 301!
+
+# Sitemap variants (underscore vs hyphen) for Google Search Console
+/sitemap_index.xml /sitemap-index.xml 301

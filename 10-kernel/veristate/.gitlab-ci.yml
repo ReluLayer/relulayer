@@ -1,0 +1,50 @@
+# .gitlab-ci.yml
+# Tailored GitLab CI/CD Pipeline for Local Rust Core
+# Global Runner Tag: docker-runner (matches Runner #8)
+
+default:
+  tags:
+    - docker-runner
+
+stages:
+  - build
+  - test
+
+variables:
+  # Reroute Cargo home inside the project directory so GitLab CI can track and cache it
+  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
+  # Force Cargo to use clean, colored output in the GitLab console log
+  CARGO_TERM_COLOR: always
+
+# Aggressive caching strategy to prevent rebuilding all crates from scratch every run
+cache:
+  key: "${CI_COMMIT_REF_SLUG}-${CI_PROJECT_NAME}"
+  paths:
+    - .cargo/registry/index/
+    - .cargo/registry/cache/
+    - .cargo/git/db/
+    - target/
+  policy: pull-push
+  fallback_keys:
+    - main-${CI_PROJECT_NAME}
+
+rust_build:
+  stage: build
+  image: rust:1.78-slim  # Light, fast, official Rust container environment
+  script:
+    - echo "🔨 Compiling Rust dependencies and core binaries..."
+    - cargo build --release
+  artifacts:
+    paths:
+      - target/release/
+    expire_in: 1 week
+    when: on_success
+
+rust_test:
+  stage: test
+  image: rust:1.78-slim
+  dependencies:
+    - rust_build
+  script:
+    - echo "🧪 Running local crate test suites..."
+    - cargo test --release

@@ -1,0 +1,29 @@
+---
+interface Props {
+  value: string;
+  label: string;
+  detail: string;
+  accent?: 'emerald' | 'gold';
+}
+
+const { value, label, detail, accent = 'emerald' } = Astro.props;
+
+const borderClass = accent === 'emerald' ? 'border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40' : 'border-gold/20 bg-gold/5 hover:border-gold/40';
+const bgClass = accent === 'emerald' ? 'bg-emerald-500' : 'bg-gold';
+const textClass = accent === 'emerald' ? 'text-emerald-400' : 'text-gold';
+---
+
+<div class={`group relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:-translate-y-0.5 ${borderClass}`}>
+  <div class={`absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-30 ${bgClass}`}></div>
+  <div class="relative">
+    <div class={`font-mono text-3xl font-bold tracking-tight sm:text-4xl ${textClass}`}>
+      {value}
+    </div>
+    <div class="mt-2 text-sm font-semibold leading-tight text-cream">
+      {label}
+    </div>
+    <div class="mt-1 text-xs text-slate-400">
+      {detail}
+    </div>
+  </div>
+</div>

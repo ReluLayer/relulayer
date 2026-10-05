@@ -1,0 +1,21 @@
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/docs/*
+  Cache-Control: public, max-age=86400
+
+/sitemap-index.xml
+  Content-Type: application/xml
+
+/sitemap-0.xml
+  Content-Type: application/xml
+
+/sitemap.xml
+  Content-Type: application/xml

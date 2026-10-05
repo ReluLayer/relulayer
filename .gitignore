@@ -1,0 +1,19 @@
+# Build artifacts
+target/
+**/target/
+
+# Cargo locks in sub-crates if needed (keep root)
+# IDEs & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python & Node artifacts for tools/ops
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+dist/

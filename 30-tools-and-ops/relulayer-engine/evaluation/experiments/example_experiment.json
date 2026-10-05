@@ -1,0 +1,14 @@
+{
+  "name": "example_qa_experiment",
+  "predictor": "evaluation.experiments.example_predictor:predict",
+  "dataset": {
+    "path": "evaluation/experiments/example_data.jsonl",
+    "input_field": "input",
+    "expected_field": "expected"
+  },
+  "parameters": {
+    "model": "qwen2.5:14b",
+    "temperature": 0.0,
+    "note": "Demonstration experiment. Replace predictor with a real model for production use."
+  }
+}
