@@ -8,6 +8,9 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 pub mod core_math;
+pub use core_math::relulayer_solve_active_set;
+pub use core_math::*;
+
 pub mod pendulum_sim;
 pub mod benchmark_harness;
 

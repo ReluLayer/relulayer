@@ -17,3 +17,10 @@ __pycache__/
 .venv/
 node_modules/
 dist/
+
+# HIL and C-ABI build binaries
+*.elf
+relulayer_hil_host
+test_c_abi
+test_c_abi.c
+apply_hil_fixes_and_build.sh
