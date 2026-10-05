@@ -1,5 +1,11 @@
 #![no_std]
-#![deny(unsafe_code)]
+
+use core::panic::PanicInfo;
+
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
+}
 
 pub mod core_math;
 pub mod pendulum_sim;
