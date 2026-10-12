@@ -1,0 +1,19 @@
+[package]
+name = "relulayer-py"
+version = "0.2.0"
+edition = "2021"
+authors = ["ReluLayer Red Team Hardening"]
+description = "PyO3 bindings for the ReluLayer security boundary."
+
+[lib]
+name = "relulayer_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+relulayer-security = { path = "../../10-kernel/relulayer-security" }
+pyo3 = { version = "0.23" }
+
+[profile.release]
+panic = "abort"
+lto = true
+opt-level = 3
