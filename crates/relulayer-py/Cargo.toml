@@ -1,0 +1,17 @@
+[package]
+name = "relulayer-py"
+version = "0.2.0"
+edition = "2021"
+authors = ["Ishmael Amin <founder@relulayer.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ReluLayer/relulayer"
+homepage = "https://relulayer.com"
+description = "PyO3 bindings for the ReluLayer security boundary."
+
+[lib]
+name = "relulayer_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+relulayer-security = { path = "../relulayer-security" }
+pyo3 = { version = "0.23" }

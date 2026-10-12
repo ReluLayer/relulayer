@@ -1,0 +1,13 @@
+# Build artifacts
+target/
+**/target/
+
+# Native extension artifacts
+*.so
+*.dylib
+*.pyd
+
+# Local virtual environments
+.venv/
+venv/
+__pycache__/

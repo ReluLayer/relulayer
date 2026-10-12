@@ -1,0 +1,39 @@
+[package]
+name = "relulayer-security"
+version = "0.2.0"
+edition = "2021"
+authors = ["Ishmael Amin <founder@relulayer.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ReluLayer/relulayer"
+homepage = "https://relulayer.com"
+description = "Zero-heap, #[no_std] boundary interceptor for AI agent action authorization."
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+
+[features]
+default = ["std"]
+# Enable standard-library support. Disable for `#![no_std]` production builds.
+std = []
+# Force software SHA-256 implementation (portable, no CPU crypto extensions).
+sha256-software = ["sha2/force-soft"]
+# Enable assembly-optimized compression on x86_64 / aarch64.
+# On x86_64 with target-feature=+sha this selects SHA-NI.
+# On aarch64 with target-feature=+crypto this selects ARMv8 Crypto extensions.
+sha256-hw = ["sha2/asm"]
+# Runtime CPU feature detection for host/PyPI builds. Selects hardware assembly
+# when CPUID / ID_AA64ISAR0_EL1 reports SHA-NI / ARMv8 Crypto support, otherwise
+# falls back to the constant-time software implementation.
+sha256-runtime-detect = ["cpufeatures"]
+
+[dependencies]
+sha2 = { version = "0.10", default-features = false }
+hmac = { version = "0.12", default-features = false }
+subtle = { version = "2.6", default-features = false }
+cpufeatures = { version = "0.2", optional = true }
+
+[dev-dependencies]
+hex-literal = "0.4"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

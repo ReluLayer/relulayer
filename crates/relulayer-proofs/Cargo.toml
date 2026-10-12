@@ -1,0 +1,15 @@
+[package]
+name = "relulayer-proofs"
+version = "0.2.0"
+edition = "2021"
+authors = ["Ishmael Amin <founder@relulayer.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ReluLayer/relulayer"
+homepage = "https://relulayer.com"
+description = "Kani bounded-model-checking proofs for ReluLayer streaming and replay invariants."
+
+[dependencies]
+relulayer-security = { path = "../relulayer-security", features = ["sha256-software"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

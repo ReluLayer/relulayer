@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "crates/relulayer-security",
+    "crates/relulayer-ffi",
+    "crates/relulayer-py",
+    "crates/relulayer-proofs",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+authors = ["Ishmael Amin <founder@relulayer.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ReluLayer/relulayer"
+homepage = "https://relulayer.com"
+documentation = "https://docs.relulayer.com"
+readme = "README.md"
+
+[profile.release]
+panic = "abort"
+lto = true
+opt-level = 3
