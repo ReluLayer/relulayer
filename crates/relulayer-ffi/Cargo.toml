@@ -10,8 +10,3 @@ crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
 relulayer-security = { path = "../../10-kernel/relulayer-security" }
-
-[profile.release]
-panic = "abort"
-lto = true
-opt-level = 3

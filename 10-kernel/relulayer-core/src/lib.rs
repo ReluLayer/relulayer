@@ -10,11 +10,16 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 pub mod core_math;
-pub use core_math::relulayer_solve_active_set;
 pub use core_math::*;
+
+pub mod multivar_4d;
+pub use multivar_4d::*;
 
 pub mod pendulum_sim;
 pub mod benchmark_harness;
 
 #[cfg(kani)]
 pub mod kani_proofs;
+
+#[cfg(kani)]
+pub mod kani_multivar_proofs;

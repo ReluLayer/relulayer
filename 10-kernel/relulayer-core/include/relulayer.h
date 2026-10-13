@@ -11,6 +11,9 @@
 typedef enum {
     SolverStatus_InvalidInput = 0,
     SolverStatus_Optimal = 1,
+    SolverStatus_MaxIterationsReached = 2,
+    SolverStatus_InfeasibleRelaxedApplied = 3,
+    SolverStatus_NumericalDegeneracy = 4,
 } SolverStatus;
 
 typedef struct {
@@ -30,11 +33,59 @@ typedef struct {
 } SolverResult;
 
 /**
+ * Per-channel actuator bounds for a 4-channel allocation problem.
+ */
+typedef struct {
+    float u_min[4];
+    float u_max[4];
+} ActuatorLimits4D;
+
+/**
+ * Linear polyhedral constraints `A u <= b` with at most `P_MAX` rows.
+ */
+typedef struct {
+    /**
+     * Number of active rows (must be <= 4).
+     */
+    uintptr_t p;
+    /**
+     * Row-major constraint normals. Only the first `p` rows are read.
+     */
+    float a[4][4];
+    /**
+     * Constraint right-hand sides. Only the first `p` entries are read.
+     */
+    float b[4];
+} LinearConstraints4D;
+
+/**
+ * Result structure returned by the 4-D multivariable solver.
+ */
+typedef struct {
+    float u_safe[4];
+    uintptr_t iterations;
+    SolverStatus status;
+} SolverResult4D;
+
+/**
  * Standard C-ABI entry point for external flight controllers (PX4, ArduPilot, bare-metal C).
  */
 int32_t relulayer_solve_active_set(float u_raw,
                                    ActuatorLimits limits,
                                    const LinearConstraints *constraints,
                                    SolverResult *out_result);
+
+/**
+ * C-ABI entry point for the 4-D multivariable active-set QP solver.
+ *
+ * # Safety
+ *
+ * All pointers must be valid and properly aligned for their respective types.
+ * `u_raw` and `limits` are read; `out_result` is written.
+ */
+int32_t relulayer_solve_multivar_4d(const float (*u_raw)[4],
+                                    const ActuatorLimits4D *limits,
+                                    const LinearConstraints4D *constraints,
+                                    SolverResult4D *out_result);
 
 #endif  /* RELULAYER_CORE_H */

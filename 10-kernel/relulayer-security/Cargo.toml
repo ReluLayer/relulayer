@@ -34,8 +34,3 @@ hex-literal = "0.4"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
-
-[profile.release]
-panic = "abort"
-lto = true
-opt-level = 3
