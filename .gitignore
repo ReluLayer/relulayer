@@ -53,3 +53,9 @@ CMakeCache.txt
 CMakeFiles/
 *.ninja
 .ninja_*
+
+# Static library and object archives
+*.a
+*.so
+*.dylib
+*.dll
