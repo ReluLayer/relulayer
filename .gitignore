@@ -45,3 +45,11 @@ apply_hil_fixes_and_build.sh
 
 # Proposal verification scratch files
 20-pilots-and-proposals/daf-drone-swarms/build/.combined_md_check.txt
+
+# C++ and CMake build directories
+bridges/**/build/
+**/build/
+CMakeCache.txt
+CMakeFiles/
+*.ninja
+.ninja_*

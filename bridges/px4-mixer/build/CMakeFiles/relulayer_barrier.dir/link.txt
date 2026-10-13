@@ -1,2 +1,0 @@
-/usr/bin/ar qc librelulayer_barrier.a CMakeFiles/relulayer_barrier.dir/src/ReluLayerBarrier.cpp.o
-/usr/bin/ranlib librelulayer_barrier.a
