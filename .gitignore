@@ -33,3 +33,12 @@ apply_hil_fixes_and_build.sh
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+
+# DAF Proposal LaTeX Intermediate Build Artifacts
+20-pilots-and-proposals/daf-drone-swarms/**/*.aux
+20-pilots-and-proposals/daf-drone-swarms/**/*.log
+20-pilots-and-proposals/daf-drone-swarms/**/*.out
+20-pilots-and-proposals/daf-drone-swarms/**/*.toc
+20-pilots-and-proposals/daf-drone-swarms/**/*.fls
+20-pilots-and-proposals/daf-drone-swarms/**/*.fdb_latexmk
+20-pilots-and-proposals/daf-drone-swarms/**/*.synctex.gz
