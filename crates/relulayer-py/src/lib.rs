@@ -1,171 +1,115 @@
-//! PyO3 bindings for the ReluLayer boundary interceptor.
+//! Zero-overhead PyO3 bindings for the ReluLayer active-set safety governor.
 //!
-//! Exposes a Python class `ReluBoundary` that wraps a persistent
-//! `BoundaryInterceptor`. The Rust side receives Python `bytes` objects as
-//! immutable `&[u8]` slices and copies them into local stack frames before
-//! HMAC evaluation, guaranteeing that concurrent Python threads cannot mutate
-//! the buffer mid-execution.
+//! Exposes a Python class `Governor` that clamps scalar and vector actuator
+//! commands to strict symmetric or asymmetric bounds via the verified
+//! `#![no_std]` ReluLayer core. The hot-path `.project()` method performs no
+//! dynamic heap allocation and no panicking branches.
 //!
 //! # Example
 //!
 //! ```python
-//! from relulayer_py import ReluBoundary
-//! boundary = ReluBoundary(b"\x07" * 32)
-//! receipt = boundary.issue_receipt(nonce, timestamp, counter, action, payload)
-//! boundary.intercept_and_authorize(action, payload, receipt)
+//! from relulayer import Governor
+//! gov = Governor(min_bound=-12.0, max_bound=12.0)
+//! safe_torque = gov.project(policy(obs))
 //! ```
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
-use relulayer_security::boundary::BoundaryInterceptor;
-use relulayer_security::crypto::{authorize, AuthorizationReceipt, BoundaryKey};
-use relulayer_security::limits::{
-    MAX_ACTION_ID_SIZE, MAX_TOTAL_PAYLOAD_SIZE, NONCE_SIZE, RECEIPT_SERIALIZED_SIZE,
-};
-use relulayer_security::ReluError;
+use relulayer_core::{ActuatorLimits, LinearConstraints, solve_active_set_scalar};
 
-/// Convert a `ReluError` into a Python `ValueError` with a descriptive message.
-fn relu_err_to_py(err: ReluError) -> PyErr {
-    let msg = match err {
-        ReluError::InvalidPointer => "invalid pointer",
-        ReluError::ActionIdOverflow => "action id exceeds maximum length",
-        ReluError::PayloadOverflow => "payload exceeds maximum length",
-        ReluError::InvalidReceipt => "invalid receipt",
-        ReluError::InvalidKeyLength => "key must be 32 bytes",
-        ReluError::AuthenticationFailure => "authentication failure",
-        ReluError::ReplayCounterViolation => "replay counter violation",
-        ReluError::ReplayNonceViolation => "replay nonce violation",
-        ReluError::HardwareShaUnavailable => "hardware SHA-256 unavailable",
-    };
-    PyValueError::new_err(msg)
-}
-
-/// Python wrapper around a stateful ReluLayer boundary interceptor.
-///
-/// Instances are not thread-safe. Each Python thread should use its own
-/// `ReluBoundary` instance, or the caller must serialize access.
+/// Python wrapper around the ReluLayer scalar active-set projection kernel.
 #[pyclass]
-pub struct ReluBoundary {
-    key: BoundaryKey,
-    interceptor: BoundaryInterceptor,
+pub struct Governor {
+    min_bound: f32,
+    max_bound: f32,
+    constraints: LinearConstraints,
 }
 
 #[pymethods]
-impl ReluBoundary {
-    /// Create a boundary interceptor from a 32-byte key.
+impl Governor {
+    /// Construct a new governor with the given actuator limits.
+    ///
+    /// # Errors
+    ///
+    /// Raises `ValueError` if `min_bound` is not strictly less than `max_bound`.
     #[new]
-    fn new(key: &Bound<'_, PyBytes>) -> PyResult<Self> {
-        let key_slice = key.as_bytes();
-        if key_slice.len() != 32 {
-            return Err(PyValueError::new_err("key must be 32 bytes"));
+    fn new(min_bound: f32, max_bound: f32) -> PyResult<Self> {
+        if !(min_bound < max_bound) {
+            return Err(PyValueError::new_err(
+                "min_bound must be strictly less than max_bound",
+            ));
         }
-        let key = BoundaryKey::from_bytes(key_slice).map_err(relu_err_to_py)?;
+
+        // Encode the box constraints as two half-space constraints so the core
+        // active-set solver can participate. The lower-bound constraint is
+        // expressed as `-u <= -min_bound`, i.e. `a = -1.0`, `b = -min_bound`.
+        let constraints = LinearConstraints {
+            a: [1.0, -1.0, 0.0, 0.0],
+            b: [max_bound, -min_bound, 0.0, 0.0],
+        };
+
         Ok(Self {
-            key,
-            interceptor: BoundaryInterceptor::new(&key),
+            min_bound,
+            max_bound,
+            constraints,
         })
     }
 
-    /// Issue a replay-resistant authorization receipt.
+    /// Project a single scalar actuator command into the safe envelope.
     ///
-    /// `nonce` must be exactly 12 bytes. `counter` must be strictly monotonic
-    /// for the authorization scope.
-    fn issue_receipt<'py>(
-        &self,
-        py: Python<'py>,
-        nonce: &Bound<'_, PyBytes>,
-        timestamp: u64,
-        counter: u64,
-        action_id: &Bound<'_, PyBytes>,
-        payload: &Bound<'_, PyBytes>,
-    ) -> PyResult<Bound<'py, PyBytes>> {
-        let nonce = nonce.as_bytes();
-        if nonce.len() != NONCE_SIZE {
-            return Err(PyValueError::new_err("nonce must be 12 bytes"));
-        }
-        let mut nonce_arr = [0u8; NONCE_SIZE];
-        nonce_arr.copy_from_slice(nonce);
-
-        let action_id = action_id.as_bytes();
-        let payload = payload.as_bytes();
-
-        let receipt = authorize(
-            &self.key,
-            &nonce_arr,
-            timestamp,
-            counter,
-            action_id,
-            payload,
-        )
-        .map_err(relu_err_to_py)?;
-
-        Ok(PyBytes::new(py, &receipt.to_bytes()))
+    /// This method is allocation-free and panic-free on the Rust side.
+    fn project(&self, u_desired: f32) -> f32 {
+        // Reconstruct limits from the cached scalar bounds so the hot path
+        // never moves out of `&self`.
+        let limits = ActuatorLimits {
+            u_min: self.min_bound,
+            u_max: self.max_bound,
+        };
+        let result = solve_active_set_scalar(u_desired, limits, &self.constraints);
+        // Defensive final clamp guarantees the public safety contract even if
+        // the core solver returns a numerical outlier.
+        result.u_safe.clamp(self.min_bound, self.max_bound)
     }
 
-    /// Verify a receipt against a Python payload snapshot.
+    /// Project a vector of actuator commands in a single call.
     ///
-    /// The Rust kernel copies `action_id` and `payload` into local stack
-    /// frames before HMAC evaluation, preventing a concurrent Python thread
-    /// from mutating the bytes object mid-execution.
-    fn intercept_and_authorize(
-        &mut self,
-        action_id: &Bound<'_, PyBytes>,
-        payload: &Bound<'_, PyBytes>,
-        receipt: &Bound<'_, PyBytes>,
-    ) -> PyResult<()> {
-        let action_id = action_id.as_bytes();
-        let payload = payload.as_bytes();
-        let receipt_bytes = receipt.as_bytes();
-
-        if action_id.len() > MAX_ACTION_ID_SIZE {
-            return Err(relu_err_to_py(ReluError::ActionIdOverflow));
-        }
-        if payload.len() > MAX_TOTAL_PAYLOAD_SIZE {
-            return Err(relu_err_to_py(ReluError::PayloadOverflow));
-        }
-        if receipt_bytes.len() != RECEIPT_SERIALIZED_SIZE {
-            return Err(relu_err_to_py(ReluError::InvalidReceipt));
-        }
-
-        let receipt = AuthorizationReceipt::from_bytes(receipt_bytes).map_err(relu_err_to_py)?;
-        self.interceptor
-            .intercept_and_authorize(action_id, payload, &receipt)
-            .map_err(relu_err_to_py)
+    /// Allocates only the output `Vec<f32>`; the per-element projection
+    /// remains allocation-free.
+    fn project_batch(&self, u_vec: Vec<f32>) -> Vec<f32> {
+        u_vec.into_iter().map(|u| self.project(u)).collect()
     }
 }
 
 /// Python module registration.
 #[pymodule]
-fn relulayer_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<ReluBoundary>()?;
+fn relulayer(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<Governor>()?;
+    m.add("__version__", "0.1.0")?;
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pyo3::types::PyBytes;
 
     #[test]
-    fn py_boundary_round_trip() {
-        pyo3::prepare_freethreaded_python();
-        Python::with_gil(|py| {
-            let key = PyBytes::new(py, &[0x07u8; 32]);
-            let mut boundary = ReluBoundary::new(&key).unwrap();
+    fn governor_clamps_scalar() {
+        let gov = Governor::new(-12.0, 12.0).unwrap();
+        assert!((gov.project(-25.0) - (-12.0)).abs() < f32::EPSILON);
+        assert!((gov.project(25.0) - 12.0).abs() < f32::EPSILON);
+        assert!((gov.project(5.0) - 5.0).abs() < f32::EPSILON);
+    }
 
-            let nonce = PyBytes::new(py, &[1u8; 12]);
-            let action = PyBytes::new(py, b"read");
-            let payload = PyBytes::new(py, b"hello");
+    #[test]
+    fn governor_rejects_inverted_bounds() {
+        assert!(Governor::new(12.0, -12.0).is_err());
+        assert!(Governor::new(12.0, 12.0).is_err());
+    }
 
-            let receipt = boundary
-                .issue_receipt(py, &nonce, 0, 1, &action, &payload)
-                .unwrap();
-            assert_eq!(receipt.len().unwrap(), RECEIPT_SERIALIZED_SIZE);
-
-            boundary
-                .intercept_and_authorize(&action, &payload, &receipt)
-                .unwrap();
-        });
+    #[test]
+    fn governor_batch_no_violations() {
+        let gov = Governor::new(-12.0, 12.0).unwrap();
+        let out = gov.project_batch(vec![-100.0, -5.0, 0.0, 7.0, 100.0]);
+        assert!(out.iter().all(|&v| v >= -12.0 && v <= 12.0));
     }
 }

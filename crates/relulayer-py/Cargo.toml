@@ -1,19 +1,17 @@
 [package]
-name = "relulayer-py"
-version = "0.2.0"
+name = "relulayer"
+version = "0.1.0"
 edition = "2021"
-authors = ["ReluLayer Red Team Hardening"]
-description = "PyO3 bindings for the ReluLayer security boundary."
+description = "Deterministic sub-microsecond physical AI safety governor"
+license = "Apache-2.0 OR MIT"
 
 [lib]
-name = "relulayer_py"
+name = "relulayer"
 crate-type = ["cdylib"]
 
 [dependencies]
-relulayer-security = { path = "../../10-kernel/relulayer-security" }
-pyo3 = { version = "0.23" }
+pyo3 = { version = "0.23", features = ["extension-module"] }
+relulayer-core = { path = "../../10-kernel/relulayer-core" }
 
-[profile.release]
-panic = "abort"
-lto = true
-opt-level = 3
+[features]
+default = []

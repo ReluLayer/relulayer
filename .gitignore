@@ -42,3 +42,6 @@ apply_hil_fixes_and_build.sh
 20-pilots-and-proposals/daf-drone-swarms/**/*.fls
 20-pilots-and-proposals/daf-drone-swarms/**/*.fdb_latexmk
 20-pilots-and-proposals/daf-drone-swarms/**/*.synctex.gz
+
+# Proposal verification scratch files
+20-pilots-and-proposals/daf-drone-swarms/build/.combined_md_check.txt
