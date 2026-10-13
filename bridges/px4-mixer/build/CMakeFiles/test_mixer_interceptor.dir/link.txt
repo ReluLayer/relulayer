@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/test_mixer_interceptor.dir/tests/test_mixer_interceptor.cpp.o -o test_mixer_interceptor  librelulayer_barrier.a -lm -ldl -lpthread /home/iamin/Organizations/ReluLayer/bridges/px4-mixer/../../10-kernel/relulayer-core/target/release/librelulayer_core.a 
