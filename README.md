@@ -1,19 +1,19 @@
 # ReluLayer
 
-ReluLayer is a MILS separation kernel for autonomous AI agent execution. Agent intent stays on one side of the boundary. An action crosses only after a replay-resistant HMAC-SHA256 receipt is checked against a persistent interceptor. The kernel snapshots the caller buffer before verification, so a concurrent writer cannot change the payload mid-check.
+ReluLayer is a Multiple Independent Levels of Security (MILS) separation kernel for autonomous Artificial Intelligence (AI) agent execution. Agent intent stays on one side of the boundary. An action crosses only after a replay-resistant Hash-based Message Authentication Code using SHA-256 (HMAC-SHA256) receipt is checked against a persistent interceptor. The kernel snapshots the caller buffer before verification, so a concurrent writer cannot change the payload mid-check.
 
 The public wedge is four crates:
 
 | Crate | Role |
 | --- | --- |
 | `relulayer-security` | `#![no_std]` authorization kernel |
-| `relulayer-ffi` | Stateful C ABI (`ReluInterceptor` opaque handle) |
-| `relulayer-py` | PyO3 bindings (`ReluBoundary`) |
-| `relulayer-proofs` | AWS Kani induction harnesses |
+| `relulayer-ffi` | Stateful Foreign Function Interface (FFI) exposing an ANSI C Application Binary Interface (C-ABI) (`ReluInterceptor` opaque handle) |
+| `relulayer-py` | PyO3 bindings (Rust bindings for the Python interpreter) (`ReluBoundary`) |
+| `relulayer-proofs` | Amazon Web Services (AWS) Kani induction harnesses |
 
 ## Latency
 
-Short tool calls take the sub-512-byte fast path. Larger payloads stream through 4 KiB stack windows up to a 64 KiB policy ceiling. The kernel does not allocate.
+Short tool calls take the sub-512-byte fast path. Larger payloads stream through 4 Kibibyte (KiB) stack windows up to a 64 KiB policy ceiling. The kernel does not allocate.
 
 | Boundary | Latency |
 | --- | --- |
@@ -56,6 +56,6 @@ LD_LIBRARY_PATH="$(python3 -c 'import sysconfig; print(sysconfig.get_config_var(
 Licensed under either of
 
 - Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
-- MIT license ([LICENSE-MIT](LICENSE-MIT))
+- Massachusetts Institute of Technology (MIT) license ([LICENSE-MIT](LICENSE-MIT))
 
 at your option.
