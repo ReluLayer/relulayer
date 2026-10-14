@@ -1,61 +1,188 @@
-# Build artifacts
+# ------------------------------------------------------------------------------
+# Rust Build Artifacts & Cargo Caches
+# ------------------------------------------------------------------------------
 target/
 **/target/
+**/*.rs.bk
+Cargo.lock.bak
 
-# Cargo locks in sub-crates if needed (keep root)
-# IDEs & OS
-.idea/
-.vscode/
+# ------------------------------------------------------------------------------
+# Python Virtual Environments, Bytecode & Packages
+# ------------------------------------------------------------------------------
+.venv/
+**/.venv/
+env/
+**/env/
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+**/*.egg-info/
+dist/
+**/dist/
+wheels/
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
+
+# ------------------------------------------------------------------------------
+# C / C++ / CMake Build Trees & Static Archives
+# ------------------------------------------------------------------------------
+build/
+**/build/
+CMakeFiles/
+**/CMakeFiles/
+CMakeCache.txt
+**/CMakeCache.txt
+CMakeScripts/
+**/CMakeScripts/
+Testing/
+**/Testing/
+Makefile.cmake
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.ninja
+.ninja_*
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.elf
+
+# HIL / embedded test binaries
+relulayer_hil_host
+**/relulayer_hil_host
+test_c_abi
+**/test_c_abi
+test_c_abi.c
+**/test_c_abi.c
+apply_hil_fixes_and_build.sh
+**/apply_hil_fixes_and_build.sh
+
+# ------------------------------------------------------------------------------
+# LaTeX Intermediate Build Artifacts
+# ------------------------------------------------------------------------------
+**/*.aux
+**/*.log
+**/*.out
+**/*.toc
+**/*.fls
+**/*.fdb_latexmk
+**/*.synctex.gz
+**/*.bbl
+**/*.blg
+**/*.nav
+**/*.snm
+**/*.vrb
+*.bak
+**/*.bak
+
+# Generated proposal deliverables (kept outside git, rebuilt from source)
+*.pdf
+**/*.pdf
+*.docx
+**/*.docx
+
+# ------------------------------------------------------------------------------
+# Node / JavaScript Package Trees & Frontend Build Artifacts
+# ------------------------------------------------------------------------------
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+**/package-lock.json
+yarn.lock
+**/yarn.lock
+pnpm-lock.yaml
+**/pnpm-lock.yaml
+
+# Astro framework generated types
+.astro/
+**/.astro/
+
+# ------------------------------------------------------------------------------
+# Flutter / Dart Tooling & Build State
+# ------------------------------------------------------------------------------
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+**/.flutter-plugins
+.flutter-plugins-dependencies
+**/.flutter-plugins-dependencies
+.pub-cache/
+**/.pub-cache/
+build/
+**/build/
+
+# Flutter platform-generated files
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# ------------------------------------------------------------------------------
+# TeX Live / TinyTeX Local Installations
+# ------------------------------------------------------------------------------
+.TinyTeX/
+**/.TinyTeX/
+.tinytex/
+**/.tinytex/
+
+# ------------------------------------------------------------------------------
+# Generated Assets, Secrets & Transient Outputs
+# ------------------------------------------------------------------------------
+.env
+**/.env
+*.bkp
+**/*.bkp
+assets/generated/
+**/assets/generated/
+assets/outputs/
+**/assets/outputs/
+ffi_debug.txt
+**/ffi_debug.txt
+ollama_response_*.txt
+**/ollama_response_*.txt
+
+# Generated diagram / slide render outputs (source is *.mmd, *.drawio, *.tex)
+**/ppa/diagrams/*.png
+**/ppa/diagrams/*.svg
+**/ppa/*.png
+**/assets/generated/*.png
+**/assets/generated/*.svg
+
+# ------------------------------------------------------------------------------
+# IDE, OS, & Transient Scratch Files
+# ------------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
 *.swp
 *.swo
 *~
-.DS_Store
-
-# Python & Node artifacts for tools/ops
-__pycache__/
-*.py[cod]
-.venv/
-node_modules/
-dist/
-
-# HIL and C-ABI build binaries
-*.elf
-relulayer_hil_host
-test_c_abi
-test_c_abi.c
-apply_hil_fixes_and_build.sh
-
-# LaTeX build intermediates
-*.aux
-*.log
-*.out
-*.toc
-*.fls
-*.fdb_latexmk
-*.synctex.gz
-
-# DAF Proposal LaTeX Intermediate Build Artifacts
-20-pilots-and-proposals/daf-drone-swarms/**/*.aux
-20-pilots-and-proposals/daf-drone-swarms/**/*.log
-20-pilots-and-proposals/daf-drone-swarms/**/*.out
-20-pilots-and-proposals/daf-drone-swarms/**/*.toc
-20-pilots-and-proposals/daf-drone-swarms/**/*.fls
-20-pilots-and-proposals/daf-drone-swarms/**/*.fdb_latexmk
-20-pilots-and-proposals/daf-drone-swarms/**/*.synctex.gz
-
-# Proposal verification scratch files
-20-pilots-and-proposals/daf-drone-swarms/build/.combined_md_check.txt
-
-# C++ and CMake build directories
-bridges/**/build/
-**/build/
-CMakeCache.txt
-CMakeFiles/
-*.ninja
-.ninja_*
-
-# Static library and object archives
-*.a
-*.so
-*.dylib
-*.dll
+.combined_md_check.txt
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.iml
+**/*.iml
