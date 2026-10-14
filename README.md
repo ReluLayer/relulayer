@@ -23,14 +23,50 @@ Short tool calls take the sub-512-byte fast path. Larger payloads stream through
 
 Host builds enable the `std` feature so tests and PyO3 can link the standard library. Production firmware builds disable `std` and compile as `#![no_std]` with `0` bytes of heap in the kernel.
 
+## When to Use ReluLayer (Applicability Matrix)
+
+ReluLayer is not a conversational text filter. It is an execution-level gatekeeper that proves an action was authorized and prevents it from being tampered with or replayed in the moment it crosses from planner to host.
+
+- **Semantic Content Filters (Guardrails AI, NVIDIA NeMo):** Run secondary LLM calls or regex parsing to evaluate conversational text ($18\text{--}25\,\text{ms}$, dynamic heap memory). Use them for brand tone, PII redaction, and chatbot toxicity.
+- **Execution-Level Gatekeepers (ReluLayer):** Intercept raw execution payloads (APIs, SQL, motor actuators) directly before execution ($0.199\,\mu\text{s}$, zero dynamic heap, anti-replay monotonicity). Use ReluLayer for tool calling, robotics control loops, and mission-critical actions.
+
+| Use Case Scenario | Use ReluLayer? | Why / Why Not |
+| :--- | :--- | :--- |
+| **Agent Tool Calling (Databases, APIs, Shells)** | **YES** | Proves the tool execution request was authorized by an upstream planner and hasn't suffered mid-flight TOCTOU tampering. |
+| **Robotics & Drones (Actuator Motor Demands)** | **YES** | Real-time control loops run at $400\text{--}1000\,\text{Hz}$ ($1{,}000\text{--}2{,}500\,\mu\text{s}$ frame budget). A $0.199\,\mu\text{s}$ interceptor fits inside the loop; a $20\,\text{ms}$ LLM filter would crash the drone. |
+| **High-Frequency Trading & FinTech Actions** | **YES** | Sub-microsecond validation of trade parameters and monotonic sequence ordering to prevent duplicate or replayed transactions. |
+| **Chatbot Brand Voice & Tone Moderation** | **NO** | ReluLayer does not analyze conversational sentiment or linguistic style. Use Guardrails AI or NeMo here. |
+| **Prompt Injection / Text Jailbreak Detection** | **NO** | ReluLayer protects the *action execution interface*, not the prompt parsing phase. Pair an input guardrail on text with ReluLayer on execution. |
+
+## Examples & Cookbook
+
+For copy-pasteable, runnable recipes covering TOCTOU-safe database tool calling, distributed replay prevention, and high-frequency robotics motor governance, see [`COOKBOOK.md`](COOKBOOK.md).
+
 ## Python
 
 ```python
 from relulayer_py import ReluBoundary
 
+# Initialize the boundary with a 32-byte shared cryptographic secret
 boundary = ReluBoundary(b"\x07" * 32)
-receipt = boundary.issue_receipt(nonce, timestamp, counter, action, payload)
-boundary.intercept_and_authorize(action, payload, receipt)
+
+action_id = b"execute_sql_query"
+payload_data = b"SELECT * FROM user_records WHERE id = 42;"
+nonce = b"123456789012"   # 12-byte unique cryptographic nonce
+timestamp = 1728849600     # Unix epoch timestamp
+counter = 1                # Strictly increasing sequence counter
+
+# 1. Authority or Planner issues a signed action receipt
+receipt = boundary.issue_receipt(nonce, timestamp, counter, action_id, payload_data)
+
+# 2. Interceptor validates authenticity, payload integrity, and counter monotonicity
+# Raises ValueError on invalid signature, corrupted payload, or replay attempt
+try:
+    boundary.intercept_and_authorize(action_id, payload_data, receipt)
+    # Action confirmed untampered and non-replayed; safe to execute
+    print("[+] Action authorized and verified.")
+except ValueError as err:
+    print(f"[-] Execution blocked: {err}")
 ```
 
 `nonce` is 12 bytes. `counter` must increase strictly for the authorization scope. Each `ReluBoundary` keeps its own replay window. Instances are not thread-safe.
