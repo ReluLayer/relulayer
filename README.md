@@ -17,9 +17,9 @@ Short tool calls take the sub-512-byte fast path. Larger payloads stream through
 
 | Boundary | Latency |
 | --- | --- |
-| ReluLayer micro-action fast path | 0.199 µs |
-| Guardrails AI | 18.2 ms |
-| NVIDIA NeMo | 24.5 ms |
+| [ReluLayer micro-action fast path](#latency) | 0.199 µs |
+| [Guardrails AI](https://github.com/guardrails-ai/guardrails) | 18.2 ms |
+| [NVIDIA NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) | 24.5 ms |
 
 Host builds enable the `std` feature so tests and PyO3 can link the standard library. Production firmware builds disable `std` and compile as `#![no_std]` with `0` bytes of heap in the kernel.
 
