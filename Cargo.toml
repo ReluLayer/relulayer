@@ -5,8 +5,6 @@ members = [
     "crates/relulayer-ffi",
     "crates/relulayer-py",
     "crates/relulayer-proofs",
-    "crates/relulayer-safety",
-    "crates/relulayer-fleet",
 ]
 resolver = "2"
 
