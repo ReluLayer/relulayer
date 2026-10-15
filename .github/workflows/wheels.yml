@@ -40,8 +40,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Set up QEMU (Linux aarch64)
-        if: matrix.platform.target == 'aarch64-unknown-linux-gnu'
+      - name: Set up QEMU
+        if: runner.os == 'Linux' && contains(matrix.platform.target, 'aarch64')
         uses: docker/setup-qemu-action@v3
 
       - name: Build Wheels
