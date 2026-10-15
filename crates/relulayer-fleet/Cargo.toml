@@ -1,0 +1,15 @@
+[package]
+name = "relulayer-fleet"
+version = "0.2.0"
+edition = "2021"
+authors = ["Ishmael Amin <ishmael.amin@outlook.com>"]
+description = "ReluLayer™ Fleet Plane: Multi-agent monotonic arbitration and enterprise key management."
+license = "Commercial"
+publish = false
+
+[dependencies]
+relulayer-core = { path = "../../10-kernel/relulayer-core" }
+
+[features]
+default = ["std"]
+std = []

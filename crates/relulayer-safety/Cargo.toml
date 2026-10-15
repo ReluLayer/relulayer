@@ -1,0 +1,16 @@
+[package]
+name = "relulayer-safety"
+version = "0.2.0"
+edition = "2021"
+authors = ["Ishmael Amin <ishmael.amin@outlook.com>"]
+description = "ReluLayer™ Safety Edition: Formal verification harnesses and DO-178C qualification artifacts."
+license = "Commercial"
+publish = false
+
+[dependencies]
+relulayer-core = { path = "../../10-kernel/relulayer-core" }
+
+[features]
+default = []
+kani-verify = []
+stack-analysis = []
