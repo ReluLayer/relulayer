@@ -22,7 +22,6 @@ fi
 
 echo "[+] Syncing open-core tree to mirror..."
 rsync -av --delete \
-    --no-group \
     --exclude='.git' \
     --exclude='target' \
     --exclude='crates/relulayer-safety' \
@@ -30,8 +29,6 @@ rsync -av --delete \
     --exclude='compliance' \
     --exclude='COMMERCIAL.md' \
     --exclude='sync-mirror.sh' \
-    --exclude='10-kernel/veristate/flutter_shell' \
-    --exclude='10-kernel/veristate/veristate-core/ffi_debug.txt' \
     "$MONOREPO_ROOT/" "$OSS_MIRROR_DIR/"
 
 # Strip proprietary workspace members from the public mirror's Cargo.toml
@@ -43,13 +40,13 @@ cd "$OSS_MIRROR_DIR"
 git config user.name "$GIT_AUTHOR_NAME"
 git config user.email "$GIT_AUTHOR_EMAIL"
 
-# Verify that the mirror workspace compiles standalone
+# Verify standalone workspace compilation
 echo "[+] Verifying public mirror workspace standalone compilation..."
 cargo check --workspace
 
 if [ -n "$(git status --porcelain)" ]; then
     git add -A
-    git commit -m "relulayer-oss: sanitize workspace manifest for open-core release"
+    git commit -m "relulayer-oss: enable manylinux container builds and sanitize manifest"
     echo "[+] Public mirror committed cleanly."
 else
     echo "[+] Public mirror is already up to date."
