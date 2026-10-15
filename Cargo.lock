@@ -462,10 +462,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "relulayer-fleet"
+version = "0.2.0"
+dependencies = [
+ "relulayer-core",
+]
+
+[[package]]
 name = "relulayer-proofs"
 version = "0.2.0"
 dependencies = [
  "relulayer-security",
+]
+
+[[package]]
+name = "relulayer-safety"
+version = "0.2.0"
+dependencies = [
+ "relulayer-core",
 ]
 
 [[package]]
