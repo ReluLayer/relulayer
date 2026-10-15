@@ -22,6 +22,7 @@ fi
 
 echo "[+] Syncing open-core tree to mirror..."
 rsync -av --delete \
+    --no-group \
     --exclude='.git' \
     --exclude='target' \
     --exclude='crates/relulayer-safety' \
@@ -29,6 +30,8 @@ rsync -av --delete \
     --exclude='compliance' \
     --exclude='COMMERCIAL.md' \
     --exclude='sync-mirror.sh' \
+    --exclude='10-kernel/veristate/flutter_shell' \
+    --exclude='10-kernel/veristate/veristate-core/ffi_debug.txt' \
     "$MONOREPO_ROOT/" "$OSS_MIRROR_DIR/"
 
 # Strip proprietary workspace members from the public mirror's Cargo.toml
