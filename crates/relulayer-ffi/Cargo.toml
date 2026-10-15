@@ -2,14 +2,11 @@
 name = "relulayer-ffi"
 version = "0.2.0"
 edition = "2021"
-authors = ["Ishmael Amin <founder@relulayer.com>"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/ReluLayer/relulayer"
-homepage = "https://relulayer.com"
+authors = ["ReluLayer Red Team Hardening"]
 description = "C-ABI opaque-handle wrapper for the ReluLayer security boundary."
 
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
 
 [dependencies]
-relulayer-security = { path = "../relulayer-security" }
+relulayer-security = { path = "../../10-kernel/relulayer-security" }

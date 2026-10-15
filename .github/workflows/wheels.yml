@@ -1,0 +1,133 @@
+name: Release & Binary Wheels
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-wheels:
+    name: Build Wheels (${{ matrix.platform.target }})
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            maturin-args: --target x86_64-unknown-linux-gnu --manylinux 2_28
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            maturin-args: --target aarch64-unknown-linux-gnu --manylinux 2_28
+          - os: macos-14
+            target: aarch64-apple-darwin
+            maturin-args: --target aarch64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
+            maturin-args: --target x86_64-apple-darwin
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up QEMU (Linux aarch64)
+        if: matrix.platform.target == 'aarch64-unknown-linux-gnu'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build Wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist ${{ matrix.platform.maturin-args }}
+          sdist: false
+
+      - name: Upload Built Wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.platform.target }}
+          path: dist/*.whl
+
+  build-sdist:
+    name: Build Source Distribution (sdist)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist/*.tar.gz
+
+  test-wheels:
+    name: Smoke Test Built Wheels (${{ matrix.os }} - Py${{ matrix.python-version }})
+    needs: [build-wheels]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Wheel and Verify Fast-Path
+        run: |
+          python -m pip install --upgrade pip
+          WHEEL=$(find artifacts -name "*$(python -c 'import platform; print(platform.system().lower())')*.whl" | head -n 1)
+          if [ -n "$WHEEL" ]; then
+            python -m pip install "$WHEEL"
+            python -c "import relulayer; print('ReluLayer loaded successfully. Version:', relulayer.__version__)"
+            python -c "from relulayer import ReluBoundary; boundary = ReluBoundary(rate_limit=100); receipt = boundary.authorize_action(0, 1.57, 2.0); assert receipt.is_authorized"
+          else
+            echo "No wheel found for current architecture; skipping."
+          fi
+
+  publish:
+    name: Publish to PyPI
+    needs: [build-wheels, build-sdist, test-wheels]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

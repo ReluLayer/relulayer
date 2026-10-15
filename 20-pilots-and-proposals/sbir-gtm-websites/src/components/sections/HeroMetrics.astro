@@ -1,0 +1,145 @@
+---
+interface Props {
+  ctaPrimaryHref?: string;
+  ctaPrimaryText?: string;
+  ctaSecondaryHref?: string;
+  ctaSecondaryText?: string;
+}
+
+const {
+  ctaPrimaryHref = '#sblo-form',
+  ctaPrimaryText = 'Request CISA Audit & SDK Briefing',
+  ctaSecondaryHref = '/relulayer',
+  ctaSecondaryText = 'Explore ReluLayer™',
+} = Astro.props;
+
+const metrics = [
+  {
+    value: '0.199 µs',
+    label: 'Worst-Case Execution Time',
+    detail: '@ 480 MHz ARM Cortex-M7',
+    accent: 'gold',
+  },
+  {
+    value: '~5,000x',
+    label: 'Faster than Cloud Watchdogs',
+    detail: 'Sub-microsecond deterministic interdiction',
+    accent: 'emerald',
+  },
+  {
+    value: '0.00%',
+    label: 'Violation Rate',
+    detail: '5,000+ HIL Stress Passes',
+    accent: 'gold',
+  },
+];
+---
+
+<section class="relative overflow-hidden bg-navy pt-16 pb-20 sm:pt-24 sm:pb-28 lg:pt-32 lg:pb-36">
+  <!-- Background gradients -->
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(245,158,11,0.10),_transparent_55%)]"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(16,185,129,0.08),_transparent_50%)]"></div>
+  <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%2394a3b8%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50"></div>
+
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+      <!-- Left copy -->
+      <div class="max-w-3xl">
+        <div class="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5">
+          <span class="flex h-2 w-2 rounded-full bg-gold animate-pulse-gold"></span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-gold">CISA Memory-Safety Compliance Ready</span>
+        </div>
+
+        <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-cream sm:text-5xl md:text-6xl leading-[1.25] sm:leading-[1.15] text-balance">
+          Deterministic AI Governance for Defense, Healthcare & Mission-Critical Edge
+        </h1>
+
+        <p class="mt-6 max-w-2xl text-lg text-slate-300 sm:text-xl md:text-2xl">
+          ReluLayer™ is a memory-safe Orchestrator engine that clips unsafe agent actions in 0.199 µs—powering autonomous defense systems and zero-trust federal Healthcare IT pipelines with mathematical certainty.
+        </p>
+
+        <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+          <a href={ctaPrimaryHref} class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+            {ctaPrimaryText}
+          </a>
+          <a href={ctaSecondaryHref} class="btn-secondary">
+            {ctaSecondaryText}
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+
+        <div class="mt-12 flex flex-wrap items-center gap-6 text-sm text-slate-400">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            <span>SAM.gov (UEI: G9WFN3AL69J3 | CAGE: 20JX8)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs text-slate-400">USPTO</span>
+            <span class="font-mono text-gold">64/127,611</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>ISO 26262 ASIL-D & CISA Compliant</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right metrics grid -->
+      <div class="relative">
+        <div class="absolute -inset-4 rounded-3xl bg-gradient-to-br from-gold/10 via-transparent to-emerald-500/10 blur-2xl"></div>
+        <div class="relative rounded-2xl border border-slate-400/10 bg-slate-800/40 p-6 backdrop-blur-md shadow-glass">
+          <div class="mb-6 flex items-center justify-between border-b border-slate-400/10 pb-4">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Verified Benchmarks</span>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              HIL Validated
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {metrics.map((metric) => (
+              <div class={`group relative overflow-hidden rounded-xl border p-5 transition-all duration-300 hover:-translate-y-0.5 ${metric.accent === 'emerald' ? 'border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40' : 'border-gold/20 bg-gold/5 hover:border-gold/40'}`}>
+                <div class={`absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-30 ${metric.accent === 'emerald' ? 'bg-emerald-500' : 'bg-gold'}`}></div>
+                <div class="relative">
+                  <div class={`font-mono text-3xl font-bold tracking-tight sm:text-4xl ${metric.accent === 'emerald' ? 'text-emerald-400' : 'text-gold'}`}>
+                    {metric.value}
+                  </div>
+                  <div class="mt-2 text-sm font-semibold leading-tight text-cream">
+                    {metric.label}
+                  </div>
+                  <div class="mt-1 text-xs text-slate-400">
+                    {metric.detail}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div class="mt-6 rounded-lg border border-slate-400/10 bg-slate-900/50 p-4 font-mono text-xs text-slate-400">
+            <div class="flex items-center gap-2 text-slate-400">
+              <span class="h-2 w-2 rounded-full bg-gold"></span>
+              <span>relulayer_kernel/src/lib.rs</span>
+            </div>
+            <p class="mt-2 text-slate-300">
+              <span class="text-purple-400">#![no_std]</span>
+              <br />
+              <span class="text-blue-400">pub</span> <span class="text-purple-400">fn</span> <span class="text-yellow-300">enforce</span>(state: &State) -&gt; SafeOutput {'{'} ... {'}'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

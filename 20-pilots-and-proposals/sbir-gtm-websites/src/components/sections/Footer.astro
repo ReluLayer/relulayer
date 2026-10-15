@@ -1,0 +1,149 @@
+---
+const currentYear = new Date().getFullYear();
+
+const currentPath = Astro.url.pathname;
+
+const footerLinks = [
+  { href: 'https://atelierlogicgroup.com/', label: 'Corporate Hub' },
+  { href: 'https://relulayer.ai/', label: 'ReluLayer™ Product' },
+  { href: 'https://atelierlogicgroup.com/capability-statement/', label: 'Capability Statement' },
+  { href: '/compliance/', label: 'AI Legal Safe Harbor' },
+  { href: '/privacy/', label: 'Privacy Policy' },
+  { href: '/terms/', label: 'Terms & Conditions' },
+  { href: '/accessibility/', label: 'Accessibility' },
+];
+
+const solutionLinks = [
+  { href: '/cisa-memory-safety-audit/', label: 'CISA Memory-Safety Audit' },
+  { href: '/autonomous-flight-safety-governor/', label: 'Autonomous Flight Safety Governor' },
+  { href: '/do178c-rust-avionics/', label: 'DO-178C Rust Avionics' },
+  { href: '/contested-ew-drone-guardrail/', label: 'Contested EW Drone Guardrail' },
+];
+---
+
+<footer class="print:hidden border-t border-slate-400/10 bg-slate-950 text-slate-300">
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+
+      <!-- Column 1: Entity Info & Contact -->
+      <div>
+        <div class="flex items-center gap-3">
+          <img
+            src="/images/relulayer-mark.png"
+            alt="ReluLayer™ Mark"
+            class="h-10 w-10 object-contain"
+          />
+          <div>
+            <p class="font-bold text-white text-base">Atelier Logic Group LLC</p>
+            <p class="text-xs font-mono text-amber-400">dba ReluLayer™</p>
+          </div>
+        </div>
+        <p class="mt-4 max-w-md text-sm text-slate-300">
+          High-assurance AI architecture and memory-safe engineering for defense autonomy, federal Healthcare IT, and mission-critical edge platforms.
+        </p>
+        <address class="mt-4 not-italic text-sm text-slate-400 space-y-1">
+          <p>32 Normandy Dr., Kenner, LA 70065</p>
+          <p>
+            Defense Inquiries: 
+            <a href="mailto:proposals@atelierlogicgroup.com" class="text-amber-400 hover:underline">proposals@atelierlogicgroup.com</a>
+          </p>
+          <p>
+            Product & OEM Licensing: 
+            <a href="mailto:solutions@relulayer.ai" class="text-amber-400 hover:underline">solutions@relulayer.ai</a>
+          </p>
+        </address>
+      </div>
+
+      <!-- Column 2: Quick Links -->
+      <div>
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-amber-400">Navigation</h3>
+        <ul class="mt-4 space-y-3">
+          {footerLinks.map((link) => {
+            const isActive = link.href.startsWith('https://') ? false : currentPath === link.href || currentPath === link.href.replace(/\/$/, '');
+            return (
+              <li>
+                <a 
+                  href={link.href} 
+                  aria-current={isActive ? 'page' : undefined}
+                  class="text-sm text-slate-300 hover:text-amber-400 transition-colors"
+                >
+                  {link.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <!-- Column 3: Solutions -->
+      <div>
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-amber-400">Solutions</h3>
+        <ul class="mt-4 space-y-3">
+          {solutionLinks.map((link) => {
+            const isActive = currentPath === link.href || currentPath === link.href.replace(/\/$/, '');
+            return (
+              <li>
+                <a
+                  href={link.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  class="text-sm text-slate-300 hover:text-amber-400 transition-colors"
+                >
+                  {link.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <!-- Column 4: Verification Data -->
+      <div>
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-amber-400">Verification</h3>
+        <ul class="mt-4 space-y-3 text-sm text-slate-300">
+          <li class="flex flex-col">
+            <span class="font-mono text-xs text-slate-400">CAGE Code</span>
+            <span class="font-mono text-white font-bold">20JX8</span>
+          </li>
+          <li class="flex flex-col">
+            <span class="font-mono text-xs text-slate-400">UEI</span>
+            <span class="font-mono text-amber-400 font-bold">G9WFN3AL69J3</span>
+          </li>
+          <li class="flex flex-col">
+            <span class="font-mono text-xs text-slate-400">SAM.gov Status</span>
+            <span class="text-emerald-400 font-semibold">Active Entity</span>
+          </li>
+          <li class="flex flex-col">
+            <span class="font-mono text-xs text-slate-400">USPTO Patent Pending</span>
+            <span class="font-mono text-white">Serial No. 64/127,611</span>
+            <span class="font-mono text-[10px] text-slate-400">PPA VII (Attorney Docket RELU-001-PPA7, filed Aug 7, 2026); continuity from PPA I–VI</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Legal Sub-Footer -->
+    <div class="mt-12 border-t border-slate-800 pt-8">
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <p class="text-xs text-slate-400">
+          © {currentYear} Atelier Logic Group LLC. All rights reserved.
+        </p>
+        <p class="text-xs text-slate-400">
+          Primary NAICS: 541715 | Key: 541511, 518210, 541330, 541512
+        </p>
+        <p class="text-xs text-slate-400 lg:text-right">
+          ReluLayer™ is a registered trademark of Atelier Logic Group LLC.
+        </p>
+      </div>
+      <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-slate-400">
+        <p>
+          This website is intended for U.S. Government, defense prime, federal health IT, and commercial R&D contracting audiences. For legal disclosures, contact <a href="mailto:legal@atelierlogicgroup.com" class="underline hover:text-slate-400">legal@atelierlogicgroup.com</a>.
+        </p>
+        <div class="flex items-center gap-3 shrink-0">
+          <a href="/privacy/" class="underline hover:text-slate-400">Privacy Policy</a>
+          <span class="text-slate-700">|</span>
+          <a href="/terms/" class="underline hover:text-slate-400">Terms & Conditions</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>

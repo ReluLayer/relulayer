@@ -1,0 +1,343 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Capability Statement — Atelier Logic Group LLC dba ReluLayer™</title><link rel="canonical" href="https://atelierlogicgroup.com/capability-statement/"><style>
+    :root {
+      --ink: #0f172a;
+      --muted: #475569;
+      --accent: #b45309;
+      --rule: #cbd5e1;
+      --panel: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    a {
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .page {
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 0.5in 0.55in;
+    }
+
+    .screen-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      margin: 1rem auto;
+      max-width: 8.5in;
+      background: var(--ink);
+      color: #fff;
+      border-radius: 0.5rem;
+    }
+
+    .screen-actions h2 {
+      font-size: 0.85rem;
+      margin: 0;
+      color: #fbbf24;
+    }
+
+    .screen-actions p {
+      font-size: 0.75rem;
+      margin: 0.15rem 0 0;
+      color: #cbd5e1;
+    }
+
+    .screen-actions .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .screen-actions button,
+    .screen-actions .download-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fbbf24;
+      color: var(--ink);
+      border: none;
+      padding: 0.5rem 0.85rem;
+      font-weight: 700;
+      border-radius: 0.35rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      text-decoration: none;
+    }
+
+    .screen-actions .download-link.secondary {
+      background: transparent;
+      color: #fbbf24;
+      border: 1px solid #fbbf24;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+
+    header .brand h1 {
+      font-size: 1.35rem;
+      font-weight: 900;
+      margin: 0;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    header .brand .tagline {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0.2rem 0 0.15rem;
+    }
+
+    header .brand .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    header .badges {
+      text-align: right;
+      font-size: 0.75rem;
+      border: 1px solid var(--rule);
+      background: var(--panel);
+      padding: 0.45rem 0.55rem;
+      border-radius: 0.35rem;
+      min-width: 175px;
+    }
+
+    header .badges p {
+      margin: 0.05rem 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 700;
+    }
+
+    header .badges .active {
+      font-family: inherit;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #047857;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 0.25rem;
+    }
+
+    section {
+      margin-bottom: 0.55rem;
+    }
+
+    h2 {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 0.15rem;
+      margin: 0 0 0.3rem 0;
+    }
+
+    p {
+      margin: 0 0 0.35rem 0;
+    }
+
+    .overview p {
+      text-align: justify;
+    }
+
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    li {
+      margin-bottom: 0.2rem;
+    }
+
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      background: #f1f5f9;
+      padding: 0.05rem 0.25rem;
+      border-radius: 0.2rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.55rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .spec {
+      border: 1px solid var(--rule);
+      background: var(--panel);
+      border-radius: 0.35rem;
+      padding: 0.45rem 0.55rem;
+      text-align: center;
+    }
+
+    .spec .value {
+      font-size: 0.95rem;
+      font-weight: 900;
+      color: var(--accent);
+      display: block;
+    }
+
+    .spec .label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      display: block;
+      margin-top: 0.15rem;
+    }
+
+    .codes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .codes .box {
+      border: 1px solid var(--rule);
+      background: var(--panel);
+      border-radius: 0.35rem;
+      padding: 0.45rem 0.55rem;
+    }
+
+    .codes .box p {
+      font-size: 0.72rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .pi {
+      border: 1px solid var(--rule);
+      background: var(--panel);
+      border-radius: 0.35rem;
+      padding: 0.45rem 0.55rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .pi p {
+      font-size: 0.72rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .use-cases {
+      border: 1px solid var(--rule);
+      background: var(--panel);
+      border-radius: 0.35rem;
+      padding: 0.45rem 0.55rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .use-cases p {
+      font-size: 0.72rem;
+      margin-bottom: 0.15rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--rule);
+      padding-top: 0.4rem;
+      font-size: 0.65rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    footer .confidential {
+      font-style: italic;
+    }
+
+    @media print {
+      @page {
+        size: letter;
+        margin: 0.35in;
+      }
+
+      .screen-actions {
+        display: none !important;
+      }
+
+      .page {
+        padding: 0;
+        max-width: none;
+        font-size: 9pt;
+      }
+
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      section, .specs, .codes, .pi, .use-cases {
+        margin-bottom: 0.4rem;
+      }
+
+      h2 {
+        margin-bottom: 0.1rem;
+      }
+
+      p {
+        margin-bottom: 0.25rem;
+      }
+
+      li {
+        margin-bottom: 0.1rem;
+      }
+    }
+
+    @media screen and (max-width: 640px) {
+      .page {
+        padding: 1rem;
+      }
+
+      .columns, .codes, .specs {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      header .badges {
+        text-align: left;
+        width: 100%;
+      }
+    }
+  </style></head> <body> <div class="screen-actions"> <div> <h2>Official Capability Statement</h2> <p>Atelier Logic Group LLC dba ReluLayer™</p> </div> <div class="actions"> <a class="download-link secondary" href="https://atelierlogicgroup.com/">Back to Site</a> <a class="download-link" href="/downloads/Capability_Statement_Atelier_Logic_Group.pdf" download>Download PDF</a> <button onclick="window.print()">Print / Save as PDF</button> </div> </div> <main class="page"> <header> <div class="brand"> <h1>Atelier Logic Group LLC</h1> <p class="tagline">dba ReluLayer™ &bull; Advanced R&D &amp; High-Assurance Systems</p> <p class="meta">32 Normandy Dr., Kenner, LA 70065 &bull; (504) 233-8722 &bull; proposals@atelierlogicgroup.com</p> </div> <div class="badges"> <p>UEI: G9WFN3AL69J3</p> <p>CAGE: 20JX8</p> <p>NAICS: 541715 · 541511 · 518210</p> <p>PSC: AC11 · AC12 · DA01 · D302</p> <p class="active">SAM.gov Active Entity</p> </div> </header> <section class="overview"> <h2>Corporate Overview</h2> <p>
+Atelier Logic Group LLC (dba ReluLayer™) is an applied Deep Tech engineering firm specializing in memory-safe software architectures and deterministic AI governance. We operate under an <strong>Orchestrator Model</strong>, delivering high-assurance execution engines that power mission-critical operations. Whether enforcing flight envelopes for autonomous UAS in contested airspace or routing zero-trust interoperability pipelines for federal healthcare networks, ReluLayer™ ensures that critical logic executes with mathematical certainty, absolute data privacy, and zero reliance on legacy cloud bottlenecks.
+</p> </section> <section class="specs"> <div class="spec"> <span class="value">0.199 µs</span> <span class="label">Worst-Case Execution Time</span> </div> <div class="spec"> <span class="value">~5,000x</span> <span class="label">Faster than Cloud Watchdogs</span> </div> <div class="spec"> <span class="value">0.00%</span> <span class="label">HIL Variance (5,000 Passes)</span> </div> <div class="spec"> <span class="value">326 B</span> <span class="label">Core Kernel Footprint</span> </div> </section> <div class="columns"> <section> <h2>Core Capabilities</h2> <ul> <li><strong>Memory-Safe Edge Infrastructure:</strong> Architect core systems using <span class="code">#![no_std]</span> Rust and C++, eliminating class-wide memory vulnerabilities with zero dynamic heap allocation to align with CISA Secure-by-Design mandates.</li> <li><strong>Sub-Microsecond Deterministic Interdiction:</strong> ReluLayer™ clips unsafe agent actions directly inside the tool execution runtime in <strong>0.199 µs</strong>—approximately 5,000x faster than cloud-based or network-level data center watchdogs.</li> <li><strong>Mathematical Active-Set Clipping:</strong> Enforce exact operational bounds via Mixed-Integer Linear Programming (MILP) rather than probabilistic LLM guardrails, guaranteeing hard real-time envelope enforcement.</li> <li><strong>Explainable AI &amp; Cryptographic Proofs:</strong> Deterministic, local toolchains (DSPy, RAG) generate immutable HMAC-SHA256 execution receipts for strict regulatory compliance and transparent audit logging.</li> <li><strong>Zero-Trust Data &amp; Interoperability:</strong> Secure, stateless routing of complex payloads—from FHIR/HL7 healthcare transactions to DICOM/PACS imaging and edge telemetry—ensuring strict isolation of protected data environments.</li> <li><strong>Legacy Code Refactoring:</strong> Migration of legacy defense and enterprise health systems to certifiable, memory-safe Rust architectures.</li> </ul> </section> <section> <h2>Differentiators &amp; IP</h2> <ul> <li><strong>The Orchestrator Model:</strong> We provide the proprietary, memory-safe execution engine and AI pipelines, empowering our network of vetted, U.S.-based sub-tier partners to seamlessly scale BPO, clinical, and operational capacity on demand.</li> <li><strong>Air-Gapped &amp; Hardware-Agnostic Resilience:</strong> Architectures execute locally on existing embedded controllers, edge silicon, or dedicated GovCloud tenants. ReluLayer maintains deterministic control during total RF jamming or C2 link degradation without requiring proprietary DPU upgrades.</li> <li><strong>Ecological Compute Efficiency:</strong> By discarding bloated legacy frameworks for hyper-efficient microservices, our platform drastically reduces compute overhead and cloud operating costs.</li> <li><strong>Enterprise AI Leadership:</strong> Led by a Principal Investigator with 30+ years of engineering experience and a track record of directing a 10,000-member global AI Guild, driving $40M+ in operational efficiency outcomes.</li> <li><strong>Patent Pending:</strong> USPTO Serial No. 64/127,611 &mdash; Asymmetric Swarm Interdiction.</li> <li><strong>100% On-Shore:</strong> Engineered, tested, and maintained in Kenner, Louisiana.</li> </ul> </section> </div> <section class="use-cases"> <h2>Dual-Use Tactical &amp; Enterprise Use Cases</h2> <ul> <li><strong>Federal Healthcare Modernization:</strong> Utilization Management (UM) platform architecture, automated FHIR/Da Vinci compliance, and clinical decision support for CMS, Medicaid, and DHA networks.</li> <li><strong>Contested Autonomous Operations:</strong> Hard real-time safety interdiction and structural envelope enforcement for UAS operations in jammed, spoofed, or denied theaters.</li> <li><strong>Legacy Code Refactoring:</strong> Migration of legacy defense and enterprise health systems to certifiable, memory-safe Rust architectures.</li> </ul> </section> <div class="codes"> <div class="box"> <h2>NAICS &amp; PSC Codes</h2> <p><strong>Primary NAICS:</strong> 541715 (R&amp;D Physical, Engineering, Life Sciences)</p> <p><strong>Key NAICS:</strong> 541511 (Custom Computer Programming), 518210 (Data Processing/Hosting), 541330 (Engineering), 541512 (Computer Systems Design)</p> <p><strong>Key PSCs:</strong> AC11, AC12, DA01, D302, AJ12, AJ13</p> </div> <div class="box"> <h2>Engagement Models</h2> <p><strong>Prime / Subcontractor:</strong> Defense R&amp;D, Direct-to-Phase II SBIR/STTR, federal health IT, and OTA Alignment.</p> <p><strong>OEM Licensing:</strong> ReluLayer™ integration for flight-stack, autonomy, and healthcare interoperability platforms.</p> <p><strong>Custom R&amp;D:</strong> Tailored high-assurance algorithms, zero-trust data pipelines, and safety certification support.</p> </div> </div> <section class="pi"> <h2>Principal Investigator</h2> <p> <strong>Ishmael Ibrahim Amin, M.S.</strong> &mdash; Principal Investigator &amp; Founder
+</p> <p>
+Northwestern University M.S. Data Science in Artificial Intelligence &bull; UC Santa Barbara B.S. Statistical Science. Former leader of DXC Technology's 10,000-member AI Guild, with a track record of deploying enterprise-scale machine learning and delivering $20M&ndash;$40M in operational efficiency outcomes.
+</p> </section> <footer> <p>Atelier Logic Group LLC &bull; www.atelierlogicgroup.com &bull; www.relulayer.ai</p> <p class="confidential">Confidential &amp; Proprietary &bull; Prepared for Defense, Federal Health IT &amp; Partner Review</p> </footer> </main> </body></html>

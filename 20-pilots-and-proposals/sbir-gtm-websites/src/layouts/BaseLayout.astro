@@ -1,0 +1,112 @@
+---
+import Navigation from '../components/sections/Navigation.astro';
+import Footer from '../components/sections/Footer.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+  pageType?: 'corporate' | 'product';
+}
+
+const defaultDescription = 'Atelier Logic Group LLC dba ReluLayer™ bridges enterprise systems literacy with edge silicon safety. We provide CISA memory-safety audits, legacy C#/.NET modernization, bare-metal #![no_std] Rust deterministic safety governors, and the ACCSE™ 2-Tier asymmetric counter-swarm engine for power inverters, automotive steer-by-wire, CNC, and tactical defense.';
+
+const { 
+  title, 
+  description = defaultDescription, 
+ canonical = '[https://atelierlogicgroup.com/](https://atelierlogicgroup.com/)', 
+  ogImage = '/images/relulayer-logo.png',
+  pageType = 'corporate' 
+} = Astro.props;
+
+const siteName = 'Atelier Logic Group LLC dba ReluLayer™';
+const themeColor = pageType === 'product' ? '#0B192C' : '#0B192C';
+---
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content={themeColor} />
+    <meta name="description" content={description} />
+    <meta name="author" content={siteName} />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/images/relulayer-mark.png" />
+    <link rel="apple-touch-icon" href="/images/relulayer-mark.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <title>{title} | {siteName}</title>
+
+    <script is:inline type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://atelierlogicgroup.com/#organization",
+          "name": "Atelier Logic Group LLC",
+          "alternateName": "Atelier Logic Group LLC dba ReluLayer™",
+          "url": "https://atelierlogicgroup.com",
+          "logo": "https://atelierlogicgroup.com/images/relulayer-logo.png",
+          "email": "proposals@atelierlogicgroup.com",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "32 Normandy Dr.",
+            "addressLocality": "Kenner",
+            "addressRegion": "LA",
+            "postalCode": "70065",
+            "addressCountry": "US"
+          },
+          "identifier": [
+            { "@type": "PropertyValue", "propertyID": "UEI", "value": "G9WFN3AL69J3" },
+            { "@type": "PropertyValue", "propertyID": "CAGE", "value": "20JX8" }
+          ]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "ReluLayer™ Safety Governor",
+          "operatingSystem": "Bare-metal MCU (ARM Cortex-M7, STM32H7, RISC-V)",
+          "applicationCategory": "Embedded Safety Micro-Kernel"
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body class="min-h-screen bg-navy text-cream antialiased">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-amber-500 focus:px-4 focus:py-2 focus:text-slate-950 focus:font-bold focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-navy"
+    >
+      Skip to main content
+    </a>
+    <div class="flex min-h-screen flex-col">
+      <Navigation variant={pageType} />
+      <main id="main-content" class="flex-1" tabindex="-1">
+        <slot />
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>

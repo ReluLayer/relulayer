@@ -1,0 +1,169 @@
+# **Atelier Logic Group LLC dba ReluLayer™ — Cursor Agent Rules**
+
+> This file is the authoritative developer-standard reference for the sbir-gtm-websites Astro project. Always consult PRD.md for full architectural context.
+>
+> **Canonical entity identity:** `AtelierLogicGroup/00-governance/entity-identity.md`. Any edits to UEI, CAGE, NAICS, PSC, patent serials, or addresses must be synchronized with that file.
+
+## **1\. Corporate Identifiers (never alter without explicit approval)**
+
+| Field | Value |
+| :---- | :---- |
+| Legal Entity | Atelier Logic Group LLC |
+| DBA | Atelier Logic Group LLC dba ReluLayer™ |
+| Address | 32 Normandy Dr., Kenner, LA 70065 USA |
+| Phone | (504) 233-8722 |
+| UEI | G9WFN3AL69J3 |
+| CAGE | 20JX8 |
+| SAM.gov | Active Entity |
+| Primary NAICS | 541715 |
+| Secondary NAICS | 541330, 541512, 541690 |
+| Primary PSC | AC11 |
+| USPTO Patent Pending | Serial No. 64/127,611 (Attorney Docket RELU-001-PPA7, filed August 7, 2026); continuity from Provisionals I–VI (64/021,087–64/124,094) |
+| Leadership | Ishmael Ibrahim Amin, M.S. — Principal Investigator & Founder |
+| Testing Partner | LSU aiR Lab — physical embedded SWaP-C HIL testing |
+
+### **Contact Emails**
+
+* Defense & SBIR: proposals@atelierlogicgroup.com  
+* Commercial/OEM: solutions@relulayer.ai or procurement@relulayer.ai  
+* Legal/IP: legal@atelierlogicgroup.com
+
+## **2\. Routing & Server Rules**
+
+### **2.1 Astro Build Configuration**
+
+// astro.config.mjs  
+export default defineConfig({  
+  site: 'https://atelierlogicgroup.com',  
+  trailingSlash: 'always',  
+  output: 'static',  
+  build: { format: 'directory' },  
+});
+
+* Corporate Hub: https://atelierlogicgroup.com/ (Static Astro build)  
+* Product Hub: https://relulayer.ai/ (Static product site)  
+* Domain Redirect: https://relulayer.com/\* → 301 Moved Permanently → https://relulayer.ai/  
+* **Legacy Route Purging:** Nginx returns 410 Gone for ^/(wp-content|wp-json|wp-includes|wp-admin|feed) to clear legacy WordPress URLs from Google Search Console.  
+* Routes are emitted as dist/\<route\>/index.html.  
+* **Static hosts will 404 any URL without a trailing slash.**
+
+### **2.2 Same-Domain Links (must use trailing slashes)**
+
+* ✅ /compliance/  
+* ✅ /privacy/  
+* ✅ /terms/  
+* ✅ /relulayer/  
+* ✅ /cisa-memory-safety-audit/  
+* ✅ /autonomous-flight-safety-governor/  
+* ✅ /contested-ew-drone-guardrail/  
+* ✅ /do178c-rust-avionics/  
+* ✅ /capability-statement/  
+* ✅ /pitch-deck/  
+* ✅ /business-card/  
+* ❌ /compliance — will 404
+
+### **2.3 Cross-Domain Links (must be absolute)**
+
+| Destination | Required URL |
+| :---- | :---- |
+| Corporate Hub | https://atelierlogicgroup.com/ |
+| Product Hub | https://relulayer.ai/ |
+| Capability Statement | https://atelierlogicgroup.com/capability-statement/ |
+| SBLO Contact Form | https://atelierlogicgroup.com/\#sblo-form |
+
+### **2.4 Canonical URLs & Sitemaps**
+
+Every page must declare a canonical URL matching the public route, including the trailing slash for directory routes:
+
+* https://atelierlogicgroup.com/  
+* https://atelierlogicgroup.com/relulayer/  
+* https://atelierlogicgroup.com/capability-statement/  
+* https://relulayer.ai/
+
+Sitemaps are generated as sitemap-index.xml referencing sitemap-0.xml and served directly with HTTP 200 OK and text/xml headers.
+
+## **3\. Astro Component Standards**
+
+### **3.1 Printable Documents**
+
+Any page intended for print or PDF export must use **inline or global styles** for @media print and :root rules. Astro's default scoped style transform will strip or hash these rules.
+
+* ✅ \<style is:inline\> — preferred for standalone printable pages (e.g., capability-statement.astro, business-card.astro).  
+* ✅ \<style is:global\> — acceptable for layout-injected print overrides (e.g., compliance.astro).  
+* ❌ \<style\> (scoped) — will break @media print and :root.
+
+### **3.2 Layout & Schema.org**
+
+* BaseLayout.astro injects global styles via \<style is:global\> and imports src/styles/global.css.  
+* The JSON-LD Schema.org block must keep is:inline so it renders as raw JSON.  
+* The pageType prop accepts 'corporate' or 'product'; both resolve to the same dark navy theme (\#0B192C).
+
+### **3.3 Footer / Navigation Maintenance**
+
+* Navigation.astro must continue using absolute URLs for all cross-domain links.  
+* When adding a new solution page, append it to Footer.astro solutionLinks with a trailing slash.
+
+## **4\. Validation Checklist (mandatory before any commit or deploy)**
+
+Run the verification command locally and fix every failure before opening a PR or deploying:
+
+npm run verify
+
+This executes:
+
+npm run build && npx linkinator ./dist \--recurse --skip 'https://atelierlogicgroup.com\|https://relulayer.ai\|https://fonts.googleapis.com\|mailto:'
+
+### **Manual checklist**
+
+* \[ \] npm run build completes with zero errors.  
+* \[ \] npx linkinator ./dist \--recurse reports zero broken links.  
+* \[ \] All cross-domain links use absolute URLs (https://...).  
+* \[ \] All same-domain links end with /.  
+* \[ \] Printable pages use \<style is:inline\> or \<style is:global\> for @media print and :root rules.  
+* \[ \] Canonical URLs match the final public route exactly.  
+* \[ \] UEI, CAGE, NAICS, PSC, and USPTO serial numbers are unchanged and consistently rendered.
+
+## **5\. CI/CD & Deployment**
+
+### **5.1 Verified Commands**
+
+| Command | Purpose |
+| :---- | :---- |
+| npm ci | Clean install in CI |
+| npm run check | Astro type/lint check |
+| npm run build | Static build to dist/ |
+| npx linkinator ./dist \--recurse | Link validation |
+| npm run verify | Combined build \+ link check |
+
+### **5.2 Deployment Pipelines & Runner Status**
+
+* **CI/CD Daemon (pacificailab):** act\_runner (v0.2.10) running as a system daemon (wsl-deploy-runner) bound to \[ubuntu-latest, ubuntu-22.04, ubuntu-20.04\].  
+* **Single Root Workflow:** Deploys both domains from the root repository:  
+  * main push → production environment (AWS Lightsail)  
+  * workflow\_dispatch → manual production deployment  
+  * atelierlogicgroup.com → /var/www/atelierlogicgroup.com/  
+  * relulayer.ai → /var/www/relulayer.ai/  
+  * Post-deploy: execute update\_nginx\_410.sh, run protect\_intellectual\_property.sh, and reload Nginx.
+
+### **5.3 Environment Secrets**
+
+* LIGHTSAIL\_SSH\_KEY\_\*, LIGHTSAIL\_HOST\_\*, LIGHTSAIL\_USER\_\*  
+* CLOUDFLARE\_ZONE\_ID, CLOUDFLARE\_API\_TOKEN
+
+## **6\. Git Commit Workflow**
+
+* Verify the current upstream branch before pushing: git branch \-vv or git status.  
+* Do not push directly to main or develop without a PR/merge request.  
+* The relulayer-site/ directory is an independent git repository. Commits inside it must be made from the relulayer-site/ working tree and pushed to its own remote.  
+* If a CLI push hangs, check the remote URL and branch tracking first; never force-push without explicit authorization.  
+* Use clear, descriptive commit messages. Do not commit secrets, .env files, or raw build artifacts (dist/ is ignored).
+
+## **7\. Common Anti-Patterns to Avoid**
+
+* Changing entity identifiers (UEI, CAGE, NAICS, PSC, USPTO serial) without explicit user approval.  
+* Using relative cross-domain links (/capability-statement/ from relulayer.ai).  
+* Omitting trailing slashes on internal directory routes.  
+* Adding scoped \<style\> blocks for @media print rules.  
+* Skipping npm run verify before a deployment.  
+* Editing files inside relulayer-site/ as if they were part of the root Astro source tree without a separate commit in that repository.  
+* Exposing internal SBIR, proposal, or IP material (docs/sbir/, public/docs/SBIR/, QUARANTINE\_DO\_NOT\_USE/, DSIP\_Submission\_\*/, FINAL\_SBIR\_SUBMISSION\_\*/) in public/, dist/, or any deployable output. These directories must stay out of the static build and repository history.

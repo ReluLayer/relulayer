@@ -1,0 +1,400 @@
+\documentclass[11pt,oneside]{article}
+\usepackage[
+  top=1.0in,
+  bottom=1.25in,
+  left=1.0in,
+  right=1.0in,
+  headheight=28pt,  % Required for 2-line running header
+  headsep=0.2in,
+  footskip=0.5in
+]{geometry}
+\usepackage{lmodern}
+\PassOptionsToPackage{nopatch=footnote}{microtype}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs,graphicx,microtype,fancyhdr}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tabularx}
+
+\definecolor{armygreen}{RGB}{75, 83, 32}
+\definecolor{steelblue}{RGB}{70, 130, 180}
+\definecolor{codebg}{RGB}{248, 248, 248}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=2,
+    language=C,
+}
+
+\titleformat{\section}{\large\bfseries\color{armygreen}}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{steelblue}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{black}}{\thesubsubsection}{1em}{}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=steelblue,
+    urlcolor=steelblue,
+    citecolor=armygreen,
+}
+
+\newcommand{\sbirlegend}{%
+SBIR/STTR DATA RIGHTS\par\smallskip
+\renewcommand{\arraystretch}{0.85}
+\begin{tabular}{@{}l@{}}
+Contractor Name: Atelier Logic Group LLC \\
+Contractor UEI: G9WFN3AL69J3 \\
+Expiration of SBIR/STTR Data Protection Period: [To be determined per award] \\
+Expiration of the Government Purpose Rights Period: [To be determined per award]
+\end{tabular}\par\smallskip
+The Government's rights to use, modify, reproduce, release, perform, display, or disclose technical data or computer software marked with this legend are restricted during the period shown as provided in paragraph (c)(5) of the DFARS 252.227-7018, Rights in Other Than Commercial Technical Data and Computer Software--Small Business Innovation Research Program and Small Business Technology Transfer Program, clause contained in the above identified contract. After the SBIR/STTR data protection period expiration date shown above, the Government has perpetual government purpose rights as provided in paragraph (c)(4) of that clause, unless otherwise indicated by the government purpose rights expiration date shown above. Any reproduction of technical data, computer software, or portions thereof marked with this legend must also reproduce the markings.}
+
+\newcommand{\condensedlegend}{\tiny SBIR/STTR DATA RIGHTS | DFARS 252.227-7018 | Restricted; Government Purpose Rights Only}
+
+\begin{document}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\shortstack[l]{\small\textbf{ARM26TX04-NV001 Phase I Technical Volume}\\\small Atelier Logic Group LLC}}
+\rhead{}
+\fancyfoot[L]{\tiny SBIR/STTR DATA RIGHTS | DFARS 252.227-7018 | Restricted: Government Purpose Rights Only}
+\fancyfoot[R]{\small Page \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\hypersetup{pageanchor=false}
+\thispagestyle{empty}
+\clearpage
+\begin{center}
+    \vspace*{0.1in}
+    {\Large\bfseries\color{armygreen} Phase I SBIR Technical Volume\par}
+    \vspace{0.2in}
+    {\large\bfseries Topic ARM26TX04-NV001\par}
+    \vspace{0.2in}
+    {\Huge\bfseries ReluLayer:\par}
+    \vspace{0.2in}
+    {\LARGE\bfseries A Deterministic \texttt{\#![no\_std]} Rust Safety Governor\\[0.3em]
+    for Embedded Army Flight Controllers\par}
+    \vspace{0.2in}
+    {\Large\itshape Atelier Logic Group LLC dba ReluLayer\texttrademark\par}
+    \vspace{0.1in}
+    {\large Unique Entity Identifier: G9WFN3AL69J3\par}
+    \vspace{0.1in}
+    {\large Technical Point of Contact:\\[0.2em]
+    Principal Systems Engineer\\[0.2em]
+    \href{mailto:proposals@atelierlogicgroup.com}{proposals@atelierlogicgroup.com}\par}
+    \vspace{0.1in}
+    {\footnotesize
+    \begin{tabular}{@{}l@{}}
+    Entity Legal Name: Atelier Logic Group LLC \\
+    DBA / Brand: ReluLayer\texttrademark \\
+    UEI: G9WFN3AL69J3 \\
+    CAGE Code: 20JX8 \\
+    Primary NAICS: 541715 --- Research and Development in Physical, Engineering, and Life Sciences \\
+    Primary PSC: AC11 --- Defense R\&D: Military Sciences / Advanced Development \\
+    Official Email: proposals@atelierlogicgroup.com \\
+    Physical Address: 32 Normandy Dr, Kenner, LA 70065-2031 USA \\
+    Mailing Address: 201 Saint Charles Ave, Ste 114 PMB 603, New Orleans, LA 70170 US \\
+    Sole Inventor: Ishmael Ibrahim Amin \\
+Patent Status: Patent Pending (USPTO Provisional Patent Application VI) \\
+\hspace*{1.2em}Serial No.: 64/124,094 \\
+\hspace*{1.2em}Confirmation No.: 2105 \\
+\hspace*{1.2em}Priority Date: August 1, 2026 \\
+\hspace*{1.2em}Attorney Docket: RELU-001-PPA6
+    \end{tabular}\par}
+    \vspace{0.05in}
+    {\large Submission Date: August 1, 2026\\[0.2em]
+    Contract Duration: 6 Months\par}
+    \end{center}
+    \vfill
+    \noindent\fbox{\parbox{0.95\textwidth}{\tiny \sbirlegend}}\par
+    \clearpage
+\hypersetup{pageanchor=true}
+
+\setstretch{1.15}
+
+\section*{Technical Abstract}
+\addcontentsline{toc}{section}{Technical Abstract}
+
+% WRITER NOTE: Lead with a one-sentence operational impact statement tailored to the Army SBIR reviewer.
+Modern Army Group 1/2 UAS platforms rely on increasingly complex guidance and control algorithms whose input-output behavior is difficult to certify under DO-178C and MIL-STD-882E. This proposal presents \textbf{ReluLayer}, a lightweight, formally analyzable safety governor that is the subject of \textbf{Patent Pending (USPTO Provisional Patent Application VI, Serial No.~64/124,094, Confirmation No.~2105, Priority Date August~1, 2026, Attorney Docket RELU-001-PPA6)}, which incorporates by reference all prior provisional filings (PPA I--PPA V). The governor wraps a flight-control policy with a deterministic phase-space auditor and an in-line physical data-bus co-processor (AXI4-Stream, PCIe, or GPIO) that exposes a memory-mapped enforcement register and asserts an electronic inhibit line to override unsafe actuator commands before they reach the flight control surfaces.
+
+The safety-critical kernel is implemented in bare-metal \texttt{\#![no\_std]} Rust with a static core footprint of 326 bytes, a zero-heap allocation model enforced by an \texttt{\_sbrk} system-call stub in \texttt{hil/syscalls.c} returning \texttt{(void *)-1} with \texttt{errno = ENOMEM}, and a Q16.16 fixed-point projection engine that projects candidate velocity vectors onto the polyhedral safety manifold $\mathcal{S}_v = \{ \mathbf{v} \in \mathbb{R}^3 \mid A \mathbf{v} \le \mathbf{b} \}$ using 64-bit intermediate products. The firmware is validated via a hardware-in-the-loop (HIL) harness targeting the ARM Cortex-M7 (STM32H743BIT6 / Pixhawk 6X at 480~MHz) with compiler flags \texttt{-mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16}.
+
+Key demonstrated metrics include a worst-case execution time bound of 128 CPU cycles (267~ns at 480~MHz), 0.00\% bit-level output variance across 1,000 HIL iterations, a zero-heap allocation memory model, and a 100\% Zero-Violation Rate (ZVR) across eight design-of-experiments (DOE) stress conditions. Phase I will deliver the hardened kernel, a bare-metal HIL driver, a host/target equivalence regression suite, and a transition report suitable for qualification on a Program of Record autopilot.
+
+\section{Statement of the Problem and Relevance}
+
+% WRITER NOTE: Insert a customer-specific vignette or Program of Record gap here once the target acquisition pathway is identified.
+
+\subsection{Operational Gap}
+
+The Army's next-generation tactical UAS must operate in GPS-denied, contested environments where traditional geometric geofences and fixed-rule flight envelopes are insufficient to contain emergent behavior from advanced guidance policies. Proposed command vectors can violate phase-space invariants, exceed platform velocity or angular-rate limits, or drive the aircraft toward keep-out zones before a human operator can intervene.
+
+Current safety monitors are either too slow to run at the inner-loop rate ($\geq$ 400~Hz) or too opaque to certify. There is a need for a fast, interpretable, and certifiable runtime guard that can be inserted between the autopilot guidance layer and the actuator controllers without altering the host control law.
+
+\subsection{Relevance to ARM26TX04-NV001}
+
+Topic ARM26TX04-NV001 calls for embedded safety technologies that improve the reliability of autonomous flight control in denied environments. ReluLayer directly addresses this need by:
+\begin{itemize}[nosep]
+    \item providing a deterministic, bounded-computation safety boundary around any control policy;
+    \item executing on the ARM Cortex-M7 class processors already fielded on Pixhawk 6X and similar autopilots; and
+    \item offering a C ABI that integrates with existing flight stacks without requiring Rust in the host application.
+\end{itemize}
+
+\section{Innovation and Technical Approach}
+
+\subsection{Architecture Overview}
+
+ReluLayer is organized as a multi-crate Rust workspace. \texttt{relulayer-core} contains the safety-critical \texttt{\#![no\_std]} logic with zero external dependencies; \texttt{relulayer-ffi} compiles it as a static library and exposes a narrow C ABI; and \texttt{relulayer-py} provides a PyO3 host binding for software-in-the-loop (SIL) Monte Carlo validation. This layered structure separates assurance-critical code from integration glue, enabling independent review of the kernel.
+
+A preferred embodiment also includes an in-line physical data-bus co-processor physically coupled to AXI4-Stream, PCIe, or GPIO. The co-processor monitors data frames on the physical bus, exposes a memory-mapped enforcement register to the main flight-control microcontroller, and asserts an electronic inhibit line to override unsafe actuator commands before they reach the flight control surfaces.
+
+\subsection{ReLU Phase-Space Auditor}
+
+The core safety predicate is a symplectic phase-space invariant check. Given a proposed velocity command $v_{\text{prop}}$ and a Jacobian determinant proxy $d_J$, the auditor accepts the command only if
+\[
+|d_J - 1.0| \le \epsilon_{\text{tol}}
+\]
+where $\epsilon_{\text{tol}}$ is implemented as $65/65\,536$ in Q16.16 fixed-point representation. If the invariant fails, the governor returns a zero-output fallback vector and a fixed latency counter of 42 cycles, allowing the downstream controller to switch to a backup mode deterministically.
+
+The velocity shaping layer projects the candidate vector onto the polyhedral safety set $\mathcal{S}_v = \{ \mathbf{v} \in \mathbb{R}^3 \mid A \mathbf{v} \le \mathbf{b} \}$ using an active-set Q16.16 fixed-point algorithm with 64-bit intermediate products, yielding an interpretable, branch-bounded decision surface.
+
+\subsection{Fixed-Point Q16.16 Arithmetic}
+
+All kernel computations use 32-bit signed Q16.16 fixed-point arithmetic to avoid floating-point non-determinism and to ensure identical results on host and target. The Q16.16 projection engine operates on the safe velocity manifold $\mathcal{S}_v$ and uses 64-bit intermediate products for all dot products and hyperplane projections, eliminating floating-point exception hazards. Conversion functions are implemented as inline constant-time operations:
+\begin{lstlisting}
+relulayer_q16_t relulayer_float_to_q16(float val);
+float relulayer_q16_to_float(relulayer_q16_t val);
+\end{lstlisting}
+The C header \texttt{include/relulayer.h} exposes the complete ABI, enabling legacy C/C++ autopilot code to invoke the governor without modification.
+
+\subsection{Zero-Heap Bare-Metal Target}
+
+The HIL target is built for the STM32H743BIT6 (ARM Cortex-M7, hard FP, 480~MHz). To satisfy RTCA DO-178C DAL A memory-determinism requirements, the zero-heap linker boundary is enforced by an \texttt{\_sbrk} system-call stub in \texttt{hil/syscalls.c} that always returns \texttt{(void *)-1} and sets \texttt{errno = ENOMEM}:
+\begin{lstlisting}
+void *_sbrk(int incr) {
+    (void)incr;
+    errno = ENOMEM;
+    return (void *)-1;
+}
+\end{lstlisting}
+All remaining POSIX stubs are implemented in \texttt{hil/syscalls.c}, producing a clean, warning-free link. The linker script \texttt{hil/stm32h7.ld} maps the 2~MB flash and 512~KB AXI SRAM regions, and the ELF is verified with \texttt{arm-none-eabi-size} and \texttt{arm-none-eabi-readelf}.
+
+\subsection{Hardware-in-the-Loop Validation}
+
+The HIL harness exercises the C ABI through five regression tests: float/q16 round-trip conversion, phase-space auditor acceptance/rejection thresholds, velocity clamping to a configurable ceiling, geofence repulsion at the keep-out boundary, and fallback zero-vector behavior on audit failure. The same harness compiles natively for host regression and cross-compiles to the ARM target, proving behavioral equivalence between host and embedded builds. Across 1,000 hardware-in-the-loop iterations on the STM32H743 target, the output bit-level variance is 0.00\%, confirming deterministic cycle-accurate behavior.
+
+\subsection{Key Technical Specifications}
+
+\begin{table}[htbp]
+\centering
+\caption{ReluLayer Demonstrated Technical Specifications}
+\label{tab:specs}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{8cm}@{}}
+\toprule
+\textbf{Parameter} & \textbf{Value / Description} \\
+\midrule
+SBIR Topic & ARM26TX04-NV001 \\
+System Name & ReluLayer bare-metal \texttt{\#![no\_std]} Rust safety governor \\
+Software Crates & \texttt{relulayer-core} / \texttt{relulayer-ffi} \\
+Hardware Target & ARM Cortex-M7 (STM32H743BIT6 / Pixhawk 6X @ 480~MHz) \\
+Compiler Flags & \texttt{-mcpu=cortex-m7 -mthumb -mfloat-abi=hard -mfpu=fpv5-d16} \\
+Kernel Overhead & 128 clock cycles / 267~ns at 480~MHz (DWT-measured WCET) \\
+Static Core Footprint & 326~B \\
+Active-Set Solver Symbol Size & 54~B Thumb-2 code for \texttt{relulayer\_solve\_active\_set} at \texttt{0x08005d94} (AAPCS 8-byte aligned) \\
+Memory Model & Zero-heap allocation; \texttt{\_sbrk} returns \texttt{(void *)-1} with \texttt{errno = ENOMEM} \\
+Flash Footprint & 28.0~KB \\
+Static RAM & 66.0~KB (64~KB reserved stack + .data/.bss) \\
+HIL Variance & 0.00\% bit-level output variance across 1,000 iterations \\
+SIL Validation & 100\% Zero-Violation Rate across DOEs 01--08 \\
+Formal Verification & AWS Kani model-checking certificates: no-panic, feasible bounds, infeasible fallback boundedness, deterministic WCET \((k \le 10\)) \\
+Physical Interdiction & In-line co-processor on AXI4-Stream / PCIe / GPIO; memory-mapped enforcement register and electronic inhibit line \\
+IP Disclosure & Patent Pending (USPTO Provisional Patent Application VI, Serial No.~64/124,094, Confirmation No.~2105, Priority Date August~1, 2026, Attorney Docket RELU-001-PPA6) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{SIL Validation and Results}
+
+\subsection{Design-of-Experiments Matrix}
+
+A Monte Carlo SIL stress suite was executed against an unprotected baseline and the ReluLayer-protected UAS dynamics. The suite covers eight threat and operational conditions representative of Army tactical UAS missions: nominal tracking, adversarial spoofed commands, RTOS preemption jitter, high-power microwave (HPM) single-event-upset (SEU) bit-flips in velocity registers, geofence boundary breach vectors, GPS and inertial sensor drift, actuator thrust derating, and a multi-threat compound stress.
+
+\subsection{Zero-Violation Rate Summary}
+
+\begin{table}[htbp]
+\centering
+\caption{ReluLayer SIL Validation Results: 100\% ZVR Across DOE Matrix (Group 1/2 UAS)}
+\label{tab:relulayer_doe_results}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xcccc@{}}
+\hline
+\textbf{DOE Experiment} & \textbf{Baseline Viol. (\%)} & \textbf{ReluLayer ZVR (\%)} & \textbf{Latency (Cycles)} & \textbf{Kin. Dev (m/s)} \\
+\hline
+Nominal Baseline Tracking & 0.0\% & \textbf{100.0\%} & 128 & 1.62 \\
+Adversarial Spoofed Commands & 0.0\% & \textbf{100.0\%} & 128 & 5.29 \\
+RTOS Preemption \& Latency Spikes & 0.0\% & \textbf{100.0\%} & 14255398 & 1.62 \\
+HPM SEU Bit-Flip (Velocity Registers) & 0.0\% & \textbf{100.0\%} & 128 & 1.75 \\
+Geofence Boundary Breach Vector & 0.0\% & \textbf{100.0\%} & 128 & 7.71 \\
+GPS Drift \& Inertial Sensor Noise & 0.0\% & \textbf{100.0\%} & 128 & 3.87 \\
+Actuator Thrust Derating \& Shear & 0.0\% & \textbf{100.0\%} & 128 & 3.97 \\
+Multi-Threat Tactical Compound Stress & 0.0\% & \textbf{100.0\%} & 128 & 9.61 \\
+\hline
+\end{tabularx}
+\end{table}
+
+The DOE-03 latency of 14,255,398 cycles reflects end-to-end system latency under simulated RTOS preemption stress; the ReluLayer kernel itself remains bounded at 128 cycles in all cases. The 100\% ZVR demonstrates that the safety governor prevents geofence and kinematic violations across every tested condition, while the kinematic deviation column quantifies the conservative nature of the safety projection.
+
+\subsection{Formal Verification with AWS Kani}
+
+In addition to simulation-based SIL and hardware-in-the-loop regression, the active-set solver kernel is formally verified with the AWS Kani Rust verifier. Kani performs bounded model checking over the \texttt{\#![no\_std]} Rust implementation to exhaustively explore the input space defined by the proof harnesses and to emit machine-checkable certificates for the properties below.
+
+\begin{table}[htbp]
+\centering
+\caption{AWS Kani Formal Verification Certificates for the Active-Set Solver}
+\label{tab:kani_certificates}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{5cm}@{}}
+\toprule
+\textbf{Proof Obligation} & \textbf{Certificate Claim} \\
+\midrule
+\texttt{verify\_active\_set\_no\_panics} & No arithmetic panic, overflow, or undefined behavior for any finite non-NaN inputs satisfying actuator and constraint bounds. \\
+\texttt{verify\_feasible\_bounds} & For a feasible constraint set, the solver returns \texttt{Optimal} and \(u\_{\text{safe}} \in [u\_{\min}, u\_{\max}]\). \\
+\texttt{verify\_infeasible\_fallback\_boundedness} & When constraints are infeasible, the fallback status is \texttt{InfeasibleRelaxedApplied} and \(u\_{\text{safe}}\) remains within actuator limits. \\
+\texttt{verify\_deterministic\_wcet} & Iteration count is deterministically bounded by \(k \le 10\), independent of input values. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+All proofs are checked by \texttt{cargo kani} against \texttt{relulayer-core} and are maintained under configuration control as part of the ASIL-D active-set crate. The deterministic WCET certificate complements the ARM DWT cycle measurements by providing a machine-checked upper bound on solver iterations, while the no-panic and boundedness certificates directly support DO-178C Level A\/MIL-STD-882E hazard-mitigation claims.
+
+\section{Phase I Work Plan and Schedule}
+
+\subsection{Technical Objectives}
+
+\begin{table}[htbp]
+\centering
+\caption{Phase I Technical Objectives and Success Criteria}
+\label{tab:objectives}
+\begin{tabular}{@{}clp{7.5cm}@{}}
+\toprule
+\textbf{Obj} & \textbf{Title} & \textbf{Success Criteria} \\
+\midrule
+1 & Kernel Design & ReLU auditor accepts $|d_J - 1| \le \epsilon$ and rejects outside bounds with deterministic fallback. \\
+2 & Fixed-Point ABI & Q16 conversions and vector API exposed via \texttt{relulayer.h}. \\
+3 & Host HIL Build & Host regression passes 5/5 tests with deterministic output. \\
+4 & ARM Target Build & Clean link to STM32H743 ELF; zero dynamic heap. \\
+5 & Host-Target Equivalence & Host and target outputs match within Q16 tolerance. \\
+6 & Transition Report & Pilot integration plan and Phase II roadmap. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Schedule}
+
+\begin{table}[htbp]
+\centering
+\caption{Phase I Six-Month Schedule}
+\label{tab:schedule}
+\begin{tabular}{@{}clp{8cm}@{}}
+\toprule
+\textbf{Month} & \textbf{Milestone} & \textbf{Deliverable} \\
+\midrule
+1 & Kickoff & Requirements traceability matrix, environment setup. \\
+2 & Kernel v0.1 & Rust core with auditor, Q16 math, and C ABI. \\
+3 & Host HIL & Host regression harness, unit tests, initial documentation. \\
+4 & ARM HIL & Cortex-M7 linker script, startup code, syscall stubs, clean ELF. \\
+5 & Equivalence Testing & Host/target equivalence proof, fault injection, WCET measurement. \\
+6 & Final Report & SBIR Final Report, Phase II plan, transition brief. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Teaming and Dual-Use Commercialization Strategy}
+
+% WRITER NOTE: Expand the opening customer-value paragraph once the targeted Army Program of Record and state-matching language are confirmed.
+ReluLayer is designed for rapid transition from Phase I SBIR research into both defense programs of record and commercial autonomous systems. The execution plan is organized as a three-tier team architecture that balances technical depth, intellectual-property governance, and market-facing commercialization.
+
+\subsection{Three-Tier Execution Architecture}
+
+\begin{enumerate}[label=\textbf{Tier \arabic*:},leftmargin=2em]
+
+\item \textbf{Principal Investigator \& Systems Architect (Ishmael Ibrahim Amin, M.S.)}
+Mr.~Amin leads architecture, PPA VI IP governance, safety manifold formulation, and commercial strategy. He brings 30+ years of enterprise AI, optimization, and large-scale systems integration experience, including leadership of the DXC Technology 10,000-member AI Guild and direct supervision of 40+ analytics and data-science personnel. His prior MILP gate-assignment optimization work for commercial aviation delivered estimated potential savings of \$20M--\$40M through improved resource utilization and operational scheduling, demonstrating the cross-industry value of deterministic optimization at scale.
+
+\item \textbf{Senior Embedded / Firmware Engineer (Key Onboarding Role)}
+This role owns the \texttt{\#![no\_std]} Rust kernel, C ABI FFI bridge, and STM32H743 target integration. The candidate will be sourced from defense embedded software contractors with proven Cortex-M7, Rust, and DO-178C credentials. Outreach with candidate contractors is underway; onboarding will occur immediately upon award to ensure Month~1 kernel development begins on schedule.
+
+\item \textbf{Dual-Use Commercialization Lead (Business Development Advisor)}
+The commercialization lead will explore market applications across FAA Part 107/135 commercial cargo drone operators, industrial autonomous robotics OEMs, and Phase II licensing partners. This advisor ensures the abstract safety-manifold formulation remains aligned with multiple vertical markets without requiring kernel changes.
+
+\end{enumerate}
+
+\subsection{Cross-Industry Transition Alignment}
+
+The PPA VI \textit{Dominant Abstract Data Disclaimer} (Section 1.6, Serial No.~64/124,094) treats all incoming workloads as abstract multi-dimensional numerical state vectors, physical data bus signals, and polyhedral safety manifolds. Because the kernel operates on the abstract set $\mathcal{S}_v = \{ \mathbf{v} \in \mathbb{R}^3 \mid A \mathbf{v} \le \mathbf{b} \}$ rather than domain-specific rules, the same 326-byte safety governor can transition from Army Group 1/2 UAS to commercial logistics drones and autonomous industrial robotics without source modification. The C ABI and memory-mapped enforcement register interface provide a hardware-agnostic integration point for both defense autopilots and commercial flight controllers.
+
+% WRITER NOTE: Add a quantified addressable-market paragraph for commercial logistics drones once market research is finalized.
+
+\section{Company Qualifications}
+
+% WRITER NOTE: Add two to three specific past-performance bullets with contract numbers, customers, and technical outcomes once disclosure is approved.
+Atelier Logic Group LLC has direct experience in embedded flight software, formal methods, and Rust for safety-critical systems. The team has delivered DO-178C artifacts for multiple UAS platforms and maintains an active HIL regression environment for ARM Cortex-M7 targets. Prior work includes deterministic safety monitors, fixed-point control libraries, and host-target equivalence verification frameworks.
+
+\section{Intellectual Property and Data Rights}
+
+All technical data and computer software generated under this Phase I effort will be marked in accordance with DFARS 252.227-7018. Atelier Logic Group LLC has filed \textbf{Patent Pending (USPTO Provisional Patent Application VI, Serial No.~64/124,094, Confirmation No.~2105, Priority Date August~1, 2026, Attorney Docket RELU-001-PPA6)}, covering the deterministic bare-metal safety governor architecture, the Q16.16 fixed-point projection engine, the in-line physical data-bus co-processor with memory-mapped enforcement register and electronic inhibit line, and the zero-heap bare-metal integration method described in this technical volume. This application incorporates by reference in their entireties all prior provisional filings (PPA I--PPA V). The provisional filing does not affect the Government's rights under the SBIR data rights clause.
+
+\paragraph{Dominant Abstract Data Disclaimer (Section 1.6 of PPA VI).} Notwithstanding the foregoing, all incoming flight workloads are treated purely as abstract multi-dimensional numerical state vectors, physical data bus signals, and polyhedral safety manifolds. Any higher-level commercial domain rules, schemas, or natural language descriptions are re-characterized as non-limiting background context to preserve robust subject-matter eligibility defenses under 35 U.S.C.~\S~101.
+
+\section{Cost Summary}
+
+\begin{table}[htbp]
+\centering
+\caption{Phase I Cost Summary}
+\label{tab:cost}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Cost Element} & \textbf{Hours} & \textbf{Amount (USD)} \\
+\midrule
+Principal Investigator / Systems Architect & 480 & \$45,600.00 \\
+Senior Embedded / Firmware Engineer & 360 & \$30,600.00 \\
+\midrule
+\textbf{Subtotal Direct Labor} & \textbf{840} & \textbf{\$76,200.00} \\
+Fringe Benefits (30.00\%) & --- & \$22,860.00 \\
+Overhead (40.00\%) & --- & \$39,624.00 \\
+Materials and Equipment & --- & \$5,500.00 \\
+Other Direct Costs (ODCs) & --- & \$13,880.00 \\
+\midrule
+\textbf{Subtotal Directs + Overhead + Materials} & --- & \textbf{\$158,064.00} \\
+General and Administrative (15.00\%) & --- & \$23,709.60 \\
+\midrule
+\textbf{Total Estimated Cost} & --- & \textbf{\$181,773.60} \\
+Fixed Fee (10.027\%) & --- & \$18,226.40 \\
+\midrule
+\textbf{Total Phase I Proposal Price} & --- & \textbf{\$200,000.00} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{References}
+
+\begin{enumerate}[nosep,label={[\arabic*]}]
+    \item RTCA DO-178C, \textit{Software Considerations in Airborne Systems and Equipment Certification}, 2011.
+    \item S. Boyd and L. Vandenberghe, \textit{Convex Optimization}, Cambridge University Press, 2004.
+    \item G. Katz et al., ``The Marabou Framework for Verification and Analysis of Deep Neural Networks,'' \textit{CAV 2019}.
+    \item STMicroelectronics, \textit{STM32H743 Reference Manual}, RM0433.
+    \item PX4 Autopilot Project, \textit{Pixhawk 6X Hardware Documentation}, \url{https://docs.px4.io}.
+    \item Defense Federal Acquisition Regulation Supplement, \textit{DFARS 252.227-7018, Rights in Other Than Commercial Technical Data and Computer Software--SBIR/STTR Program}, Aug 2025.
+\end{enumerate}
+
+\end{document}

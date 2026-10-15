@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Content, frontmatter } from '../../docs/Terms_and_Conditions_ReluLayer.md';
+
+const title = frontmatter.title;
+const description = frontmatter.description;
+const canonical = 'https://atelierlogicgroup.com/terms/';
+---
+
+<BaseLayout pageType="corporate" title={title} description={description} canonical={canonical}>
+  <section class="py-16 sm:py-20 lg:py-24">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+      <article class="legal-document">
+        <Content />
+      </article>
+      <div class="mt-10">
+        <a href="https://atelierlogicgroup.com/" class="btn-secondary">← Back to Corporate Hub</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .legal-document h1 { @apply text-3xl font-bold text-cream mb-6; }
+  .legal-document h2 { @apply text-xl font-semibold text-gold mt-8 mb-4; }
+  .legal-document p { @apply text-slate-300 leading-relaxed mb-4; }
+  .legal-document ul { @apply list-disc list-inside text-slate-300 mb-4 space-y-2; }
+  .legal-document a { @apply text-amber-400 hover:underline; }
+  .legal-document strong { @apply text-cream font-semibold; }
+</style>

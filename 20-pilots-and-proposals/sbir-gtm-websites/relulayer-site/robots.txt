@@ -1,0 +1,23 @@
+# Block major AI web scrapers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+# Standard web crawlers & legacy WordPress blocks
+User-agent: *
+Disallow: /wp-content/
+Disallow: /wp-json/
+Disallow: /wp-includes/
+Disallow: /feed/
+Disallow: /wp-admin/
+Disallow: /docs/
+
+Sitemap: https://atelierlogicgroup.com/sitemap-index.xml

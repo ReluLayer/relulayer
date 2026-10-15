@@ -1,0 +1,14 @@
+# Build target for STM32H7 / ARM Cortex-M7 reference hardware.
+# Uncomment the line below to make thumbv7em-none-eabihf the default build target.
+# [build]
+# target = "thumbv7em-none-eabihf"
+
+# Linker and runner settings for the embedded target.
+[target.thumbv7em-none-eabihf]
+runner = "qemu-system-arm -cpu cortex-m7 -machine none -nographic -kernel"
+rustflags = ["-C", "link-arg=-Tlink.x"]
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"

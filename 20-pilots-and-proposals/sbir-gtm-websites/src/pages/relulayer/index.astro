@@ -1,0 +1,164 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeroMetrics from '../../components/sections/HeroMetrics.astro';
+import ArchitectureCompliance from '../../components/sections/ArchitectureCompliance.astro';
+import AccseCapabilityCard from '../../components/sections/AccseCapabilityCard.astro';
+import TechnicalAuditCards from '../../components/sections/TechnicalAuditCards.astro';
+import GuardrailSandbox from '../../components/islands/GuardrailSandbox';
+import SpecMatrix from '../../components/sections/SpecMatrix.astro';
+import CodePreview from '../../components/islands/CodePreview';
+
+const title = 'ReluLayer™ — Sub-Microsecond Deterministic Orchestrator for Defense & Healthcare IT';
+const description = 'ReluLayer™ is a deterministic, bare-metal #![no_std] Rust Orchestrator engine with a worst-case execution time of 0.199 µs, zero dynamic heap allocation, and CISA memory-safety compliance. It clips unsafe agent actions in defense autonomy and zero-trust federal Healthcare IT pipelines with mathematical certainty.';
+const canonical = 'https://atelierlogicgroup.com/relulayer/';
+---
+
+<BaseLayout title={title} description={description} canonical={canonical} pageType="product">
+  <HeroMetrics
+    ctaPrimaryHref="#contact"
+    ctaPrimaryText="Request Technical Brief"
+    ctaSecondaryHref="#specs"
+    ctaSecondaryText="View Specification Matrix"
+  />
+
+  <ArchitectureCompliance />
+
+  <AccseCapabilityCard />
+
+  <TechnicalAuditCards />
+
+  <GuardrailSandbox client:load />
+
+  {/* High-Impact Feature Matrix */}
+  <section class="py-16 sm:py-20 bg-slate-900/50">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <h2 class="section-heading">Target Verticals & Physical Constraints</h2>
+        <p class="mt-4 text-lg text-slate-300">
+          ReluLayer™ brings sub-microsecond determinism to systems where physical and statutory requirements mandate it.
+        </p>
+      </div>
+      
+      <div class="mt-12 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl border border-slate-400/10 bg-slate-800/30 p-6 transition-all hover:border-gold/30">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-gold">Contested Autonomous Operations</h3>
+          <p class="mt-3 text-sm text-slate-300">
+            Aerospace, tactical UAS, and swarm interdiction under total RF/GPS denial with ASTM F3269-17 / DoD 3000.09 alignment.
+          </p>
+        </div>
+        
+        <div class="rounded-2xl border border-slate-400/10 bg-slate-800/30 p-6 transition-all hover:border-gold/30">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-gold">Federal Healthcare IT &amp; Zero-Trust Interop</h3>
+          <p class="mt-3 text-sm text-slate-300">
+            Secure, stateless routing of FHIR/HL7, DICOM/PACS, and edge telemetry for CMS, Medicaid, and DHA networks with strict data isolation.
+          </p>
+        </div>
+        
+        <div class="rounded-2xl border border-slate-400/10 bg-slate-800/30 p-6 transition-all hover:border-gold/30">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-gold">Automotive, Industrial &amp; Embedded Safety</h3>
+          <p class="mt-3 text-sm text-slate-300">
+            ISO 26262 ASIL-D steer-by-wire, precision CNC, wide-bandgap power inverters, and legacy C/C++ to #![no_std] Rust modernization.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="specs">
+    <SpecMatrix />
+  </div>
+
+  {/* High-Assurance Refactoring Callout */}
+  <section class="py-16 sm:py-20">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="rounded-2xl border border-gold/20 bg-gold/5 p-8 sm:p-12 lg:p-16">
+        <div class="max-w-3xl">
+          <div class="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wider text-gold">Legacy C/C++ Refactoring</span>
+          </div>
+          <h2 class="mt-4 section-heading">Don't Rely on Naive <code class="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-gold">c2rust</code> Transpilation</h2>
+          <p class="mt-4 text-lg text-slate-300">
+            Automated transpilers fail CISA audits because they preserve unsafe pointer semantics and leave UB-laden edge cases untouched. We refactor legacy C/C++ flight control loops into safe, idiomatic <code class="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-gold">#![no_std]</code> Rust with deterministic WCET, zero dynamic heap allocation, and optional Kani formal verification proofs.
+          </p>
+          <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+            <a href="#contact" class="btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+              Request CISA Audit & SDK Briefing
+            </a>
+            <a href="https://atelierlogicgroup.com/capability-statement/" class="btn-secondary">
+              View Capability Statement
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CodePreview client:load />
+
+  {/* Engagement Options & Pricing Cards */}
+  <section class="py-16 sm:py-20 bg-slate-900/50 border-y border-slate-800">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <h2 class="section-heading">Engagement Options &amp; Pricing</h2>
+        <p class="mt-4 text-lg text-slate-300">
+          Transparent, fixed-fee audits and T&amp;M blocks to accelerate your CISA memory-safety roadmap.
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-6 sm:grid-cols-2">
+        <div class="rounded-2xl border border-gold/30 bg-slate-800/50 p-6 shadow-gold-glow">
+          <h3 class="text-xl font-bold text-cream">CISA Memory-Safety Audit</h3>
+          <p class="mt-3 text-sm text-slate-300">
+            <strong>$15,000.00 – $25,000.00 Fixed Diagnostic Audit:</strong> Timeboxed analysis capped at ≤ 50,000 LOC. 
+            <em>Requires a single-command build prerequisite (e.g., Docker/Devcontainer) to eliminate unmetered setup time.</em>
+          </p>
+        </div>
+        <div class="rounded-2xl border border-slate-400/10 bg-slate-800/30 p-6 transition-all hover:border-gold/30">
+          <h3 class="text-xl font-bold text-cream">C-to-Rust Refactoring Blocks</h3>
+          <p class="mt-3 text-sm text-slate-300">
+            <strong>$375.00/hr</strong> for prepaid T&amp;M engineering blocks (e.g., $37,500.00 retainer for 100 hrs).
+            <em>Also requires a single-command build prerequisite (Docker/Devcontainer) for immediate C/C++ build verification prior to refactoring.</em>
+          </p>
+        </div>
+      </div>
+      
+      <div class="mt-8 rounded-xl border border-slate-700 bg-slate-800/40 p-4 text-center">
+        <p class="text-sm text-slate-400">
+          <strong>Identifiers:</strong> SAM.gov Active Entity | CAGE: <span class="text-slate-300">20JX8</span> | UEI: <span class="text-slate-300">G9WFN3AL69J3</span> <br/>
+          <strong>Intellectual Property:</strong> USPTO Patent Pending Serial No. <span class="text-gold">64/127,611</span> (ReluLayer™ & ACCSE™ Core Logic)
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="py-20 sm:py-24 lg:py-32">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="rounded-2xl border border-gold/20 bg-gold/5 p-8 sm:p-12 lg:p-16">
+        <div class="max-w-3xl">
+          <h2 class="section-heading">Request a Technical Brief or Licensing Discussion</h2>
+          <p class="mt-4 text-lg text-slate-300">
+            ReluLayer is available for evaluation, pilot integration, and defense-sector licensing. Our engineering team will respond with architecture diagrams, timing traces, and export control guidance.
+          </p>
+          <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+            <a href="mailto:proposals@atelierlogicgroup.com" class="btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              Email Engineering Team
+            </a>
+            <a href="https://atelierlogicgroup.com/" class="btn-secondary">
+              Visit Corporate Hub
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

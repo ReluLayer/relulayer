@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "crates/relulayer-security",
+    "10-kernel/relulayer-core",
+    "10-kernel/relulayer-security",
     "crates/relulayer-ffi",
     "crates/relulayer-py",
     "crates/relulayer-proofs",
@@ -10,12 +11,13 @@ resolver = "2"
 [workspace.package]
 version = "0.2.0"
 edition = "2021"
-authors = ["Ishmael Amin <founder@relulayer.com>"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/ReluLayer/relulayer"
-homepage = "https://relulayer.com"
-documentation = "https://docs.relulayer.com"
-readme = "README.md"
+authors = ["ReluLayer Red Team Hardening"]
+license = "Proprietary"
+
+[workspace.dependencies]
+relulayer-core = { path = "10-kernel/relulayer-core" }
+relulayer-security = { path = "10-kernel/relulayer-security" }
+relulayer-ffi = { path = "crates/relulayer-ffi" }
 
 [profile.release]
 panic = "abort"

@@ -1,0 +1,64 @@
+---
+const applications = [
+  {
+    id: 'automotive',
+    title: 'Automotive & EV Powertrain (ISO 26262 ASIL-D)',
+    description: 'Sub-microsecond active-set torque clamping and slip-angle safety governors for autonomous vehicles and high-voltage inverter controls.',
+    icon: 'car',
+  },
+  {
+    id: 'industrial',
+    title: 'Industrial Robotics & High-Power Lasers',
+    description: 'Deterministic hardware-level emergency interdiction for high-speed CNC, robotic arms, and laser machinery, preventing runaway kinetic damage.',
+    icon: 'robot',
+  },
+  {
+    id: 'power',
+    title: 'Smart Grid & Power Electronics',
+    description: 'Grid inverter frequency governors and microgrid control safety kernels running directly on bare-metal ARM Cortex-M silicon.',
+    icon: 'grid',
+  },
+];
+
+const iconPaths: Record<string, string> = {
+  car: 'M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0m6 0h4m0 0a2 2 0 1 0 4 0m-4 0a2 2 0 1 1 4 0',
+  robot: 'M12 8V4H8M2 14h2M20 14h2M15 13v2M9 13v2M4 10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8zM12 2v2',
+  grid: 'M3 3h18v18H3z M12 3v18 M3 12h18',
+};
+---
+
+<section class="relative overflow-hidden py-16 sm:py-20 lg:py-24 bg-slate-950 border-y border-slate-800">
+  <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl">
+      <div class="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5">
+        <span class="text-xs font-semibold uppercase tracking-wider text-gold">Commercial Dual-Use & Industrial Applications</span>
+      </div>
+      <h2 class="mt-4 text-3xl font-bold tracking-tight text-cream sm:text-4xl">Dual-Use Commercial & Industrial Applications</h2>
+      <p class="mt-4 text-lg text-slate-300">
+        Extending our sub-microsecond deterministic runtime safety kernels into high-value commercial sectors, ensuring fail-safe operations in automotive, industrial, and power electronics.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-8 grid-cols-1 md:grid-cols-3">
+      {applications.map((app) => (
+        <div class="group relative overflow-hidden rounded-2xl border border-slate-400/10 bg-slate-800/30 p-8 transition-all duration-300 hover:border-gold/30 hover:bg-slate-800/50">
+          <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gold/5 blur-2xl transition-colors group-hover:bg-gold/10"></div>
+          
+          <div class="relative">
+            <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-700/50 text-gold shadow-inner transition-colors group-hover:bg-gold/15 group-hover:text-gold">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d={iconPaths[app.icon]} />
+              </svg>
+            </div>
+            
+            <h3 class="mt-6 text-xl font-bold text-cream leading-tight">{app.title}</h3>
+            
+            <p class="mt-3 text-sm leading-relaxed text-slate-300">
+              {app.description}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

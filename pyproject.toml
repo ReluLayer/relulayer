@@ -1,0 +1,51 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "relulayer"
+version = "0.2.0"
+description = "Deterministic zero-heap edge governor and execution gatekeeper for physical autonomous systems."
+readme = "README.md"
+authors = [{ name = "Ishmael Amin", email = "ishmael.amin@outlook.com" }]
+license = { text = "MIT OR Apache-2.0" }
+requires-python = ">=3.9"
+keywords = [
+    "robotics",
+    "safety",
+    "deterministic",
+    "execution-gatekeeper",
+    "no-std",
+    "formal-methods",
+    "edge-governor",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Robotics",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/relulayer/relulayer"
+Documentation = "https://github.com/relulayer/relulayer#readme"
+Repository = "https://github.com/relulayer/relulayer"
+Issues = "https://github.com/relulayer/relulayer/issues"
+
+[tool.maturin]
+python-source = "python"
+module-name = "relulayer._relulayer"
+manifest-path = "crates/relulayer-py/Cargo.toml"
+features = ["pyo3/extension-module"]
