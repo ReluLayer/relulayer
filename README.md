@@ -1,15 +1,68 @@
-# ReluLayer
+# ReluLayer™
 
-ReluLayer is a Multiple Independent Levels of Security (MILS) separation kernel for autonomous Artificial Intelligence (AI) agent execution. Agent intent stays on one side of the boundary. An action crosses only after a replay-resistant Hash-based Message Authentication Code using SHA-256 (HMAC-SHA256) receipt is checked against a persistent interceptor. The kernel snapshots the caller buffer before verification, so a concurrent writer cannot change the payload mid-check.
+[![CI / Build & Test](https://github.com/relulayer/relulayer/actions/workflows/wheels.yml/badge.svg)](https://github.com/relulayer/relulayer/actions)
+[![PyPI Version](https://img.shields.io/pypi/v/relulayer.svg?color=blue)](https://pypi.org/project/relulayer/)
+[![Crates.io](https://img.shields.io/crates/v/relulayer.svg?color=orange)](https://crates.io/crates/relulayer)
+[![Rust MSRV](https://img.shields.io/badge/rustc-1.75%2B-brightgreen.svg)](https://www.rust-lang.org)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-yellow.svg)](LICENSE-APACHE)
+[![Fast-Path Latency](https://img.shields.io/badge/Fast--Path%20Latency-0.199%20%CE%BCs-blueviolet)](https://github.com/relulayer/relulayer)
 
-The public wedge is four crates:
+> **Deterministic Edge Governor & Real-Time Execution Gatekeeper for Physical Super Intelligence (SI), Autonomous Robotics, and High-Assurance Actuators.**
 
-| Crate | Role |
-| --- | --- |
-| `relulayer-security` | `#![no_std]` authorization kernel |
-| `relulayer-ffi` | Stateful Foreign Function Interface (FFI) exposing an ANSI C Application Binary Interface (C-ABI) (`ReluInterceptor` opaque handle) |
-| `relulayer-py` | PyO3 bindings (Rust bindings for the Python interpreter) (`ReluBoundary`) |
-| `relulayer-proofs` | Amazon Web Services (AWS) Kani induction harnesses |
+## Quickstart
+
+### Pre-Compiled Universal Wheels (Recommended)
+
+ReluLayer™ publishes pre-compiled binary wheels for Linux (`x86_64`, `aarch64`) and macOS (`arm64`, `x86_64`). No local Rust toolchain or C-compiler is required:
+
+```bash
+pip install --upgrade relulayer
+```
+
+Verify in Python:
+
+```python
+import relulayer
+from relulayer import ReluBoundary
+
+# Instantiate deterministic edge governor with stack-allocated bounds
+boundary = ReluBoundary(
+    max_velocity_rad_s=4.18,
+    monotonic_window_size=64,
+    hmac_key=b"0123456789abcdef0123456789abcdef"
+)
+
+# Fast-path verification (0.199 µs)
+receipt = boundary.authorize_action(
+    target_axis=0,
+    requested_position=1.57,
+    commanded_velocity=2.0
+)
+assert receipt.is_authorized
+```
+
+### Source Build Fallback (Embedded & Custom Targets)
+
+For bare-metal microcontrollers (ARM Cortex-R52/M7, RISC-V), QNX, or VxWorks:
+
+1. **Install Prerequisites**:
+
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   pip install maturin
+   ```
+
+2. **Build `#![no_std]` Separation Kernel**:
+
+   ```bash
+   cargo build --release --no-default-features
+   ```
+
+3. **Install Local Development Bindings**:
+
+   ```bash
+   maturin develop --release
+   ```
 
 ## Latency
 
@@ -41,35 +94,6 @@ ReluLayer is not a conversational text filter. It is an execution-level gatekeep
 ## Examples & Cookbook
 
 For copy-pasteable, runnable recipes covering TOCTOU-safe database tool calling, distributed replay prevention, and high-frequency robotics motor governance, see [`COOKBOOK.md`](COOKBOOK.md).
-
-## Python
-
-```python
-from relulayer_py import ReluBoundary
-
-# Initialize the boundary with a 32-byte shared cryptographic secret
-boundary = ReluBoundary(b"\x07" * 32)
-
-action_id = b"execute_sql_query"
-payload_data = b"SELECT * FROM user_records WHERE id = 42;"
-nonce = b"123456789012"   # 12-byte unique cryptographic nonce
-timestamp = 1728849600     # Unix epoch timestamp
-counter = 1                # Strictly increasing sequence counter
-
-# 1. Authority or Planner issues a signed action receipt
-receipt = boundary.issue_receipt(nonce, timestamp, counter, action_id, payload_data)
-
-# 2. Interceptor validates authenticity, payload integrity, and counter monotonicity
-# Raises ValueError on invalid signature, corrupted payload, or replay attempt
-try:
-    boundary.intercept_and_authorize(action_id, payload_data, receipt)
-    # Action confirmed untampered and non-replayed; safe to execute
-    print("[+] Action authorized and verified.")
-except ValueError as err:
-    print(f"[-] Execution blocked: {err}")
-```
-
-`nonce` is 12 bytes. `counter` must increase strictly for the authorization scope. Each `ReluBoundary` keeps its own replay window. Instances are not thread-safe.
 
 ## Formal verification
 

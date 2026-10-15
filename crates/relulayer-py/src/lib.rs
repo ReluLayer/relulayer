@@ -1,115 +1,306 @@
-//! Zero-overhead PyO3 bindings for the ReluLayer active-set safety governor.
+//! Zero-overhead PyO3 bindings for the ReluLayer™ deterministic edge governor.
 //!
-//! Exposes a Python class `Governor` that clamps scalar and vector actuator
-//! commands to strict symmetric or asymmetric bounds via the verified
-//! `#![no_std]` ReluLayer core. The hot-path `.project()` method performs no
-//! dynamic heap allocation and no panicking branches.
-//!
-//! # Example
-//!
-//! ```python
-//! from relulayer import Governor
-//! gov = Governor(min_bound=-12.0, max_bound=12.0)
-//! safe_torque = gov.project(policy(obs))
-//! ```
+//! Exposes `ReluBoundary`, `ReluReceipt`, `ReluViolation`, and
+//! `MonotonicCounter` under the public `relulayer` namespace. The hot-path
+//! `authorize_action()` method performs all safety checks over stack-resident
+//! fixed-size buffers and delegates HMAC computation to the verified
+//! `#![no_std]` `relulayer-security` micro-kernel.
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyException, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
-use relulayer_core::{ActuatorLimits, LinearConstraints, solve_active_set_scalar};
+use pyo3::types::PyBytes;
+use relulayer_security::boundary::BoundaryInterceptor;
+use relulayer_security::crypto::{authorize, AuthorizationReceipt, BoundaryKey};
+use relulayer_security::limits::{MAX_ACTION_ID_SIZE, NONCE_SIZE, RECEIPT_SERIALIZED_SIZE};
+use relulayer_security::ReluError;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Python wrapper around the ReluLayer scalar active-set projection kernel.
+// Re-export the legacy scalar active-set governor so existing examples and
+// benchmarks keep working while the public namespace migrates to ReluBoundary.
+mod governor;
+pub use governor::Governor;
+
+/// Current Python package version.
+const PYTHON_VERSION: &str = "0.2.0";
+
+/// Nanosecond timestamp since the Unix epoch.
+fn now_nanos() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos() as u64
+}
+
+/// A monotonically increasing 64-bit counter.
 #[pyclass]
-pub struct Governor {
-    min_bound: f32,
-    max_bound: f32,
-    constraints: LinearConstraints,
+pub struct MonotonicCounter {
+    value: AtomicU64,
 }
 
 #[pymethods]
-impl Governor {
-    /// Construct a new governor with the given actuator limits.
-    ///
-    /// # Errors
-    ///
-    /// Raises `ValueError` if `min_bound` is not strictly less than `max_bound`.
+impl MonotonicCounter {
     #[new]
-    fn new(min_bound: f32, max_bound: f32) -> PyResult<Self> {
-        if !(min_bound < max_bound) {
-            return Err(PyValueError::new_err(
-                "min_bound must be strictly less than max_bound",
-            ));
+    #[pyo3(signature = (initial_value = 0))]
+    fn new(initial_value: u64) -> Self {
+        Self {
+            value: AtomicU64::new(initial_value),
         }
+    }
 
-        // Encode the box constraints as two half-space constraints so the core
-        // active-set solver can participate. The lower-bound constraint is
-        // expressed as `-u <= -min_bound`, i.e. `a = -1.0`, `b = -min_bound`.
-        let constraints = LinearConstraints {
-            a: [1.0, -1.0, 0.0, 0.0],
-            b: [max_bound, -min_bound, 0.0, 0.0],
+    /// Return the next strictly greater counter value.
+    fn next_value(&self) -> u64 {
+        self.value.fetch_add(1, Ordering::SeqCst) + 1
+    }
+
+    /// Return the current counter value without advancing it.
+    fn current_value(&self) -> u64 {
+        self.value.load(Ordering::SeqCst)
+    }
+}
+
+/// Exception raised when an action request violates the ReluLayer boundary.
+#[pyclass(extends = PyException)]
+pub struct ReluViolation {
+    #[pyo3(get)]
+    axis: i32,
+    #[pyo3(get)]
+    violation_type: String,
+    #[pyo3(get)]
+    message: String,
+}
+
+#[pymethods]
+impl ReluViolation {
+    #[new]
+    #[pyo3(signature = (axis = 0, violation_type = String::new(), message = String::new()))]
+    fn new(axis: i32, violation_type: String, message: String) -> Self {
+        Self {
+            axis,
+            violation_type,
+            message,
+        }
+    }
+
+    fn __str__(&self) -> String {
+        format!(
+            "ReluViolation(axis={}, violation_type={}): {}",
+            self.axis, self.violation_type, self.message
+        )
+    }
+}
+
+/// Replay-resistant authorization receipt returned by `ReluBoundary`.
+#[pyclass]
+pub struct ReluReceipt {
+    authorized: bool,
+    sequence_id: u64,
+    timestamp_nanos: u64,
+    receipt_bytes: [u8; RECEIPT_SERIALIZED_SIZE],
+    action_id: String,
+    payload: [u8; 16],
+}
+
+#[pymethods]
+impl ReluReceipt {
+    #[getter]
+    fn is_authorized(&self) -> bool {
+        self.authorized
+    }
+
+    #[getter]
+    fn sequence_id(&self) -> u64 {
+        self.sequence_id
+    }
+
+    #[getter]
+    fn timestamp_nanos(&self) -> u64 {
+        self.timestamp_nanos
+    }
+
+    #[getter]
+    fn receipt_hash<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.receipt_bytes)
+    }
+
+    /// Re-verify this receipt against a 32-byte boundary key.
+    fn verify(&self, key: &[u8]) -> PyResult<bool> {
+        if key.len() != 32 {
+            return Ok(false);
+        }
+        let boundary_key = match BoundaryKey::from_bytes(key) {
+            Ok(k) => k,
+            Err(_) => return Ok(false),
+        };
+        let receipt = match AuthorizationReceipt::from_bytes(&self.receipt_bytes) {
+            Ok(r) => r,
+            Err(_) => return Ok(false),
+        };
+        match authorize(
+            &boundary_key,
+            &receipt.nonce,
+            receipt.timestamp,
+            receipt.counter,
+            self.action_id.as_bytes(),
+            &self.payload,
+        ) {
+            Ok(expected) => Ok(expected.tag == receipt.tag),
+            Err(_) => Ok(false),
+        }
+    }
+}
+
+/// Mutable state owned by a `ReluBoundary` instance.
+struct BoundaryState {
+    interceptor: BoundaryInterceptor,
+    window_start: u64,
+    window_count: u64,
+}
+
+/// Deterministic edge governor that authorizes physical actions.
+#[pyclass]
+pub struct ReluBoundary {
+    rate_limit: u64,
+    max_velocity: f64,
+    #[allow(dead_code)]
+    monotonic_window_size: usize,
+    counter: AtomicU64,
+    state: Mutex<BoundaryState>,
+}
+
+#[pymethods]
+impl ReluBoundary {
+    #[new]
+    #[pyo3(signature = (rate_limit = 1000, max_velocity_rad_s = 4.18, monotonic_window_size = 64, hmac_key = None))]
+    fn new(
+        rate_limit: u64,
+        max_velocity_rad_s: f64,
+        monotonic_window_size: usize,
+        hmac_key: Option<&[u8]>,
+    ) -> PyResult<Self> {
+        let key = match hmac_key {
+            Some(k) => BoundaryKey::from_bytes(k)
+                .map_err(|_| PyValueError::new_err("hmac_key must be exactly 32 bytes"))?,
+            None => BoundaryKey::from_bytes(&[0u8; 32]).expect("zero key is valid"),
         };
 
         Ok(Self {
-            min_bound,
-            max_bound,
-            constraints,
+            rate_limit,
+            max_velocity: max_velocity_rad_s,
+            monotonic_window_size,
+            counter: AtomicU64::new(0),
+            state: Mutex::new(BoundaryState {
+                interceptor: BoundaryInterceptor::new(&key),
+                window_start: now_nanos(),
+                window_count: 0,
+            }),
         })
     }
 
-    /// Project a single scalar actuator command into the safe envelope.
-    ///
-    /// This method is allocation-free and panic-free on the Rust side.
-    fn project(&self, u_desired: f32) -> f32 {
-        // Reconstruct limits from the cached scalar bounds so the hot path
-        // never moves out of `&self`.
-        let limits = ActuatorLimits {
-            u_min: self.min_bound,
-            u_max: self.max_bound,
-        };
-        let result = solve_active_set_scalar(u_desired, limits, &self.constraints);
-        // Defensive final clamp guarantees the public safety contract even if
-        // the core solver returns a numerical outlier.
-        result.u_safe.clamp(self.min_bound, self.max_bound)
-    }
+    /// Authorize a single actuator command and return a signed receipt.
+    fn authorize_action(
+        &self,
+        target_axis: i32,
+        requested_position: f64,
+        commanded_velocity: f64,
+    ) -> PyResult<ReluReceipt> {
+        // Velocity safety envelope.
+        if commanded_velocity.abs() > self.max_velocity {
+            return Err(PyErr::new::<ReluViolation, _>((
+                target_axis,
+                "velocity_exceeded",
+                format!(
+                    "commanded_velocity {} rad/s exceeds max_velocity_rad_s {} rad/s",
+                    commanded_velocity, self.max_velocity
+                ),
+            )));
+        }
 
-    /// Project a vector of actuator commands in a single call.
-    ///
-    /// Allocates only the output `Vec<f32>`; the per-element projection
-    /// remains allocation-free.
-    fn project_batch(&self, u_vec: Vec<f32>) -> Vec<f32> {
-        u_vec.into_iter().map(|u| self.project(u)).collect()
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| PyRuntimeError::new_err("ReluBoundary state is poisoned"))?;
+
+        let now = now_nanos();
+        if now - state.window_start >= 1_000_000_000 {
+            state.window_start = now;
+            state.window_count = 1;
+        } else {
+            state.window_count += 1;
+            if state.window_count > self.rate_limit {
+                return Err(PyErr::new::<ReluViolation, _>((
+                    target_axis,
+                    "rate_limited",
+                    "action rate limit exceeded",
+                )));
+            }
+        }
+
+        let sequence_id = self.counter.fetch_add(1, Ordering::SeqCst) + 1;
+
+        let mut nonce = [0u8; NONCE_SIZE];
+        getrandom::getrandom(&mut nonce)
+            .map_err(|e| PyRuntimeError::new_err(format!("failed to generate nonce: {e}")))?;
+
+        let action_id = format!("axis_{}", target_axis);
+        if action_id.len() > MAX_ACTION_ID_SIZE {
+            return Err(PyValueError::new_err("target_axis produces oversized action id").into());
+        }
+
+        let mut payload = [0u8; 16];
+        payload[..8].copy_from_slice(&requested_position.to_le_bytes());
+        payload[8..].copy_from_slice(&commanded_velocity.to_le_bytes());
+
+        let receipt = state
+            .interceptor
+            .issue_receipt(&nonce, now, sequence_id, action_id.as_bytes(), &payload)
+            .map_err(|e| relu_error_to_py_err(target_axis, e))?;
+
+        // Persist replay state by validating the just-issued receipt.
+        state
+            .interceptor
+            .intercept_and_authorize(action_id.as_bytes(), &payload, &receipt)
+            .map_err(|e| relu_error_to_py_err(target_axis, e))?;
+
+        Ok(ReluReceipt {
+            authorized: true,
+            sequence_id,
+            timestamp_nanos: now,
+            receipt_bytes: receipt.to_bytes(),
+            action_id,
+            payload,
+        })
     }
+}
+
+fn relu_error_to_py_err(axis: i32, err: ReluError) -> PyErr {
+    let (ty, msg): (&str, &str) = match err {
+        ReluError::InvalidPointer => ("invalid_pointer", "null or misaligned pointer"),
+        ReluError::ActionIdOverflow => ("action_id_overflow", "action id exceeds maximum size"),
+        ReluError::PayloadOverflow => ("payload_overflow", "payload exceeds maximum size"),
+        ReluError::InvalidReceipt => ("invalid_receipt", "receipt is malformed"),
+        ReluError::InvalidKeyLength => ("invalid_key_length", "key must be 32 bytes"),
+        ReluError::AuthenticationFailure => ("authentication_failure", "HMAC verification failed"),
+        ReluError::ReplayCounterViolation => {
+            ("replay_counter", "monotonic counter violation (replay)")
+        }
+        ReluError::ReplayNonceViolation => ("replay_nonce", "nonce reuse detected"),
+        ReluError::HardwareShaUnavailable => {
+            ("hardware_sha_unavailable", "hardware SHA unavailable")
+        }
+    };
+    PyErr::new::<ReluViolation, _>((axis, ty, msg))
 }
 
 /// Python module registration.
 #[pymodule]
-fn relulayer(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _relulayer(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add("__version__", PYTHON_VERSION)?;
+    m.add_class::<ReluBoundary>()?;
+    m.add_class::<ReluReceipt>()?;
+    m.add_class::<ReluViolation>()?;
+    m.add_class::<MonotonicCounter>()?;
     m.add_class::<Governor>()?;
-    m.add("__version__", "0.1.0")?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn governor_clamps_scalar() {
-        let gov = Governor::new(-12.0, 12.0).unwrap();
-        assert!((gov.project(-25.0) - (-12.0)).abs() < f32::EPSILON);
-        assert!((gov.project(25.0) - 12.0).abs() < f32::EPSILON);
-        assert!((gov.project(5.0) - 5.0).abs() < f32::EPSILON);
-    }
-
-    #[test]
-    fn governor_rejects_inverted_bounds() {
-        assert!(Governor::new(12.0, -12.0).is_err());
-        assert!(Governor::new(12.0, 12.0).is_err());
-    }
-
-    #[test]
-    fn governor_batch_no_violations() {
-        let gov = Governor::new(-12.0, 12.0).unwrap();
-        let out = gov.project_batch(vec![-100.0, -5.0, 0.0, 7.0, 100.0]);
-        assert!(out.iter().all(|&v| v >= -12.0 && v <= 12.0));
-    }
 }
