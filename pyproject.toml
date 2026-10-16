@@ -49,3 +49,4 @@ python-source = "python"
 module-name = "relulayer._relulayer"
 manifest-path = "crates/relulayer-py/Cargo.toml"
 features = ["pyo3/extension-module"]
+include = ["LICENSE-MIT", "LICENSE-APACHE"]
