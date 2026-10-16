@@ -1,0 +1,212 @@
+# ------------------------------------------------------------------------------
+# Rust Build Artifacts & Cargo Caches
+# ------------------------------------------------------------------------------
+target/
+**/target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# ------------------------------------------------------------------------------
+# Python Virtual Environments, Bytecode & Packages
+# ------------------------------------------------------------------------------
+.venv/
+**/.venv/
+env/
+**/env/
+venv/
+**/venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+**/*.egg-info/
+dist/
+**/dist/
+wheels/
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
+
+# ------------------------------------------------------------------------------
+# C / C++ / CMake Build Trees & Static Archives
+# ------------------------------------------------------------------------------
+build/
+**/build/
+CMakeFiles/
+**/CMakeFiles/
+CMakeCache.txt
+**/CMakeCache.txt
+CMakeScripts/
+**/CMakeScripts/
+Testing/
+**/Testing/
+Makefile.cmake
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.ninja
+.ninja_*
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.elf
+
+# HIL / embedded test binaries
+relulayer_hil_host
+**/relulayer_hil_host
+test_c_abi
+**/test_c_abi
+test_c_abi.c
+**/test_c_abi.c
+apply_hil_fixes_and_build.sh
+**/apply_hil_fixes_and_build.sh
+
+# ------------------------------------------------------------------------------
+# LaTeX Intermediate Build Artifacts
+# ------------------------------------------------------------------------------
+**/*.aux
+**/*.log
+**/*.out
+**/*.toc
+**/*.fls
+**/*.fdb_latexmk
+**/*.synctex.gz
+**/*.bbl
+**/*.blg
+**/*.nav
+**/*.snm
+**/*.vrb
+*.bak
+**/*.bak
+
+# Generated proposal deliverables (kept outside git, rebuilt from source)
+*.pdf
+**/*.pdf
+*.docx
+**/*.docx
+
+# ------------------------------------------------------------------------------
+# Node / JavaScript Package Trees & Frontend Build Artifacts
+# ------------------------------------------------------------------------------
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+**/package-lock.json
+yarn.lock
+**/yarn.lock
+pnpm-lock.yaml
+**/pnpm-lock.yaml
+
+# Astro framework generated types
+.astro/
+**/.astro/
+
+# ------------------------------------------------------------------------------
+# Flutter / Dart Tooling & Build State
+# ------------------------------------------------------------------------------
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+**/.flutter-plugins
+.flutter-plugins-dependencies
+**/.flutter-plugins-dependencies
+.pub-cache/
+**/.pub-cache/
+build/
+**/build/
+
+# Flutter platform-generated files
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+
+# ------------------------------------------------------------------------------
+# TeX Live / TinyTeX Local Installations
+# ------------------------------------------------------------------------------
+.TinyTeX/
+**/.TinyTeX/
+.tinytex/
+**/.tinytex/
+
+# ------------------------------------------------------------------------------
+# Generated Assets, Secrets & Transient Outputs
+# ------------------------------------------------------------------------------
+.env
+**/.env
+*.bkp
+**/*.bkp
+assets/generated/
+**/assets/generated/
+assets/outputs/
+**/assets/outputs/
+ffi_debug.txt
+**/ffi_debug.txt
+ollama_response_*.txt
+**/ollama_response_*.txt
+
+# Generated diagram / slide render outputs (source is *.mmd, *.drawio, *.tex)
+**/ppa/diagrams/*.png
+**/ppa/diagrams/*.svg
+**/ppa/*.png
+**/assets/generated/*.png
+**/assets/generated/*.svg
+
+# ------------------------------------------------------------------------------
+# IDE, OS, & Transient Scratch Files
+# ------------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.combined_md_check.txt
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.iml
+**/*.iml
+
+# -------------------------------------------------------------
+# Secrets & Cryptographic Material
+# -------------------------------------------------------------
+*.pem
+*.key
+id_rsa*
+
+# -------------------------------------------------------------
+# Internal Proposals, Pilots, and Private Documents
+# -------------------------------------------------------------
+20-pilots-and-proposals/
+30-tools-and-ops/
+proposals/
+pilots/
+docs_internal/
+*.sh
+*.docx
+*.pdf
+
+# Public build / verification scripts (negate broad *.sh ignore above)
+!10-kernel/relulayer-core/audit_repo_topology.sh
+!10-kernel/relulayer-core/fix_and_run_kani.sh
+!10-kernel/relulayer-core/run_kani_verification_and_commit.sh

@@ -1,0 +1,12 @@
+[package]
+name = "relulayer-ffi"
+version = "0.2.0"
+edition = "2021"
+authors = ["ReluLayer Red Team Hardening"]
+description = "C-ABI opaque-handle wrapper for the ReluLayer security boundary."
+
+[lib]
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[dependencies]
+relulayer-security = { path = "../../10-kernel/relulayer-security" }

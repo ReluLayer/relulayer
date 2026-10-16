@@ -1,0 +1,22 @@
+[package]
+name = "_relulayer"
+version = "0.2.0"
+edition = "2021"
+description = "Deterministic zero-heap edge governor and execution gatekeeper for physical autonomous systems."
+license = "MIT OR Apache-2.0"
+authors = ["Ishmael Amin <ishmael.amin@outlook.com>"]
+
+[lib]
+name = "_relulayer"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = "0.23"
+relulayer-core = { path = "../../10-kernel/relulayer-core" }
+relulayer-security = { path = "../../10-kernel/relulayer-security" }
+getrandom = "0.2"
+
+[features]
+default = []
+# Enable when building the extension module (maturin enables this automatically).
+extension-module = ["pyo3/extension-module"]

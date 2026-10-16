@@ -1,0 +1,54 @@
+---
+description: "Enforces database isolation, high-throughput SQLCipher tuning, runtime singletons, Transactional Outbox patterns, in-process git2 execution limits, and asynchronous Dart Isolate offloading rules."
+globs: ["veristate-core/src/**/*.rs", "flutter_shell/lib/**/*.dart"]
+alwaysApply: true
+---
+
+# VeriState Microarchitecture & Data Isolation Invariants
+
+## 1. Forbidden Subprocess Patterns
+- **Rule:** Absolute prohibition of external shell process invocation for Git synchronization[cite: 4].
+- **Prohibited Syntax:** `std::process::Command::new("git")` is structurally banned from entering any source file[cite: 3].
+- **Mandated Engine:** All repository interactions—including staging, index manipulation, user identity signing, commit building, packfile compression, and remote SSH network pushes—must execute entirely within the memory-space limits of the process using native static/dynamic linking against the `git2` library crate bindings[cite: 4].
+
+## 2. The Transactional Outbox Pattern
+- **Rule:** Decouple local mutation events completely from remote network availability[cite: 5].
+- **Relational Invariant:** Every system update altering state definitions must write to its target data schema table and append a tracking metadata row to the `outbox` table within the **same atomic database transaction block**[cite: 6].
+- **Outbox Schema Definition:**
+  ```sql
+  CREATE TABLE IF NOT EXISTS outbox (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      payload TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      status TEXT DEFAULT 'PENDING', -- 'PENDING', 'PROCESSING', 'SENT', 'FAILED'
+      attempts INTEGER DEFAULT 0,
+      last_error TEXT
+  );
+  ```
+
+## 3. Persistent Runtime Singletons & FFI Boundaries
+- **Rule:** Re-initializing database handles, running cryptographic key derivation (KDF), or re-decrypting database files on a per-call basis across the C-ABI boundary is strictly prohibited.
+- **Mandated Pattern:** The unmanaged FFI gateway must preserve the primary execution context and database state connections inside a global, thread-safe container using `OnceLock<Mutex<T>>`.
+- **Memory Protection Invariant:** All unmanaged memory pointer blocks allocated by the Rust core and passed across the FFI boundary must be immediately unpacked into pure, immutable Dart models. Raw pointers must be safely reclaimed using explicit native destructors (`free_ffi_finding`) inside an enforced Dart `finally {}` execution scope to completely neutralize native memory drifts or pointer leak conditions.
+
+## 4. Advanced Storage Engine Performance Tuning
+- **Rule:** The local relational storage system must bypass standard filesystem locking overhead via explicit low-overhead kernel-level parameters.
+- **Mandated Initialization Queries:** Every secure database connection instance must be bootstrapped with these exact tuning parameters:
+  ```sql
+  PRAGMA journal_mode = WAL;
+  PRAGMA synchronous = NORMAL;
+  PRAGMA locking_mode = EXCLUSIVE;
+  PRAGMA mmap_size = 268435456;  -- 256 MB Virtual Memory Address space mapping
+  PRAGMA cache_size = -64000;    -- 64 MB Volatile RAM Cache Page allocation
+  PRAGMA temp_store = MEMORY;    -- Volatile RAM Temporary table storage
+  ```
+- **Locking Invariant:** `EXCLUSIVE` locking must remain active during the application lifecycle. This ensures the single-process core retains ownership of the file locks permanently, completely bypassing OS kernel file-lock teardown overhead during sequential transaction `COMMIT` execution tracks.
+
+## 5. Asynchronous Presentation Isolation
+- **Rule:** The presentation layer's user interface thread must never be blocked by unmanaged native processing workloads.
+- **Conformity Constraint:** Any user-triggered operation routing telemetry data to the native FFI gateway that exceeds a 2.0 ms execution profile must be explicitly offloaded to an independent background OS thread using Dart's actor-model execution engine (`Isolate.run()`).
+- **UI Responsiveness Target:** This isolation barrier guarantees that the primary application thread preserves a strict frame latency target under 8.33 ms, ensuring a consistent 120Hz display environment during high-intensity disk-ingestion cycles.
+
+## 6. Upcoming Pipeline Guardrails (Group Commit & Pruning)
+- **Batch Ingress Invariant:** Any future expansion targeting high-speed telemetry collection must process incoming data structures through a volatile in-memory queue. Compiling rows sequentially into multi-record atomic database batch flushes is required to prevent hardware storage controller IOPS throttling.
+- **Storage Degradation Prevention:** Edge retention cleaning routines must invoke background purging queries targeting successfully synchronized `outbox` records, cleanly removing historical database items outside of the specified operational time envelope (e.g., 30 days) to protect target system storage capacity.

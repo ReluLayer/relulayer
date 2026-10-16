@@ -1,0 +1,35 @@
+---
+
+### File 4: `/home/iamin/veristate/.cursor/rules/tdd_audit.mdc`
+
+```markdown
+---
+description: "Enforces the Test-Driven Development (TDD) lifecycle along with the Audit Analysis pattern while actively minimizing token consumption."
+globs: ["veristate-core/src/**/*.rs", "flutter_shell/test/**/*.dart", "flutter_shell/lib/**/*.dart"]
+alwaysApply: true
+---
+
+# VeriState Institutional TDD Lifecycle & Memory Safety Verification
+
+## 1. Test-Driven Development (TDD) Mandate
+All core code adjustments crossing or supporting the unmanaged FFI interface boundary must advance strictly through the following multi-stage development loop:
+1. **RED Phase:** Author deterministic structural unit tests asserting exact business logic expectations inside the module's localized `#[cfg(test)]` block *before* modifying production implementations.
+2. **GREEN Phase:** Generate the minimum, high-performance compilation code necessary to pass all test assertions.
+3. **REFACTOR Phase:** Streamline matching algorithms, eliminate redundant heap allocations, and confirm strict memory alignment constraints across ABI structures while maintaining green tests.
+
+## 2. Token Overhead Mitigation Controls
+To preserve context depth and eliminate conversational bloat across our rate-limited channels, you must strictly apply the following syntax constraints:
+- **Diff-Only Outputs:** Never print full, unaltered source code files. Always present code modifications using explicit unified patch diff code blocks highlighting changed lines.
+- **Prohibit Text Fluff:** Skip polite introductory greetings, conversational filler, conversational summaries, and closing pleasantries. Let the technical changes and audit logs stand on their own.
+- **Isolate Module Scope:** Never rewrite testing layouts or configurations when showing implementation adjustments unless an explicit test failure correction loop is active.
+
+## 3. Audit Analysis Design Pattern
+Every single code modification iteration response must terminate with this exact text-only verification manifest block. If any box fails validation, the output is void:
+
+```text
+=== DETERMINISTIC AUDIT MANIFEST ===
+[✓] Safety: No unmanaged raw pointer memory leaks (FFI allocations bound).
+[✓] Invariant: Pure geometric/text math; zero probabilistic AI model logic.
+[✓] State: Database entries atomic and mapped cleanly to SQLCipher WAL specs.
+[✓] Tests: Red/Green verification loop executed completely on Rust 1.90.
+====================================
