@@ -186,3 +186,15 @@ Thumbs.db
 **/.vscode/
 *.iml
 **/*.iml
+
+# -------------------------------------------------------------
+# Internal Proposals, Pilots, and Private Documents
+# -------------------------------------------------------------
+20-pilots-and-proposals/
+30-tools-and-ops/
+proposals/
+pilots/
+docs_internal/
+*.sh
+*.docx
+*.pdf

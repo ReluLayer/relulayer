@@ -1,8 +1,0 @@
-[package]
-name = "relulayer-core"
-version = "0.1.0"
-edition = "2021"
-authors = ["Atelier Logic Group LLC"]
-
-[dependencies]
-# Zero external dependencies for strict #![no_std] compliance
