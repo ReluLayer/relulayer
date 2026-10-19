@@ -17,7 +17,7 @@ Because the boundary is local, swarm cardinality scales with the number of avail
 
 ---
 
-## Q2: What is the impact on flight controller SWaP-C (Size, Weight, Power, and Cost)?n
+## Q2: What is the impact on flight controller SWaP-C (Size, Weight, Power, and Cost)?
 
 **A:** Zero hardware additions are required. ReluLayer runs on the existing Pixhawk 6X / STM32H7 / PX4 flight computer already carried by the airframe.
 
@@ -69,7 +69,7 @@ No operating-system patches or custom drivers are required.
 | **Open-source community bridges** | `relulayer-py` PyO3 bindings, example notebooks, benchmark harnesses | Apache-2.0 OR MIT — encourages research and industry adoption |
 | **Proprietary high-assurance flight core** | `relulayer-core` kernel, `bridges/px4-mixer` interceptor, DO-178C/DO-333 artifacts | DFARS SBIR Data Rights (FAR 52.227-20 / DFARS 252.227-7018); protected proprietary data for 20 years |
 
-GovernmentPurpose Rights are available for Phase II deliverables, with negotiated licensing for production transition.
+Government Purpose Rights are available for Phase II deliverables, with negotiated licensing for production transition.
 
 ---
 
@@ -109,20 +109,24 @@ GovernmentPurpose Rights are available for Phase II deliverables, with negotiate
 
 ---
 
+## Executive Order 14434 & Terminology Alignment
+
+ReluLayer™ is framed strictly as a deterministic **Edge Governor** and **Execution Gatekeeper**. It does not claim sentience, "reflexes," "thoughts," or "instincts." Under EO 14434 and related AI-safety policy, the system is a bounded, formally verified constraint-enforcement layer that operates on physical actuator demands. No Super-Intelligence (SI) or Physical-SI capability is asserted; the technology is a safety-critical control barrier, not a general-purpose autonomous agent.
+
+---
+
 ## DFARS 252.227-7018(f) SBIR Data Rights Legend
 
-SBIR DATA RIGHTS
+**SBIR DATA RIGHTS**
 
-Contract Number: DAF26BX06-DV026 (Pending)
-Contractor: Atelier Logic Group LLC dba ReluLayer™
-Physical Address: 32 Normandy Drive, Kenner, LA 70065
-Mailing Address: 201 Saint Charles Ave., Ste 114 PMB 603, New Orleans, LA 70170
-CAGE: 20JX8
-UEI: G9WFN3AL69J3
-DFARS 252.227-7018
-Expiration of SBIR Data Protection Period: October 21, 2046
-Expiration of Government Purpose Rights Period: Perpetual upon expiration of SBIR data protection period
+Contract No.: DAF26BX06-DV026 (Pending)  
+Contractor Name: Atelier Logic Group LLC dba ReluLayer™  
+Physical Address: 32 Normandy Drive, Kenner, LA 70065  
+Mailing Address: 201 Saint Charles Ave., Ste 114 PMB 603, New Orleans, LA 70170  
+CAGE: 20JX8 | UEI: G9WFN3AL69J3  
+DFARS 252.227-7018  
+Expiration of SBIR Data Rights Period: October 21, 2046
 
-The Government's rights to use, modify, reproduce, release, perform, display, or disclose technical data or computer software marked with this legend are restricted during the period shown as provided in paragraph (f) of DFARS 252.227-7018, Rights in Other Than Commercial Technical Data and Computer Software—Small Business Innovation Research Program, clause contained in the above identified contract. After the SBIR data protection period expiration date shown above, the Government has perpetual government purpose rights as provided in paragraph (f) of that clause, unless otherwise indicated by the government purpose rights expiration date shown above. Any reproduction of technical data, computer software, or portions thereof marked with this legend must also reproduce the markings.
+The Government's rights to use, modify, reproduce, release, perform, display, or disclose technical data or computer software marked with this legend are restricted during the period shown as provided in paragraph (b)(4) of the Rights in Noncommercial Technical Data and Computer Software--Small Business Innovation Research (SBIR) Program clause contained in the above identified contract. No restrictions apply after the expiration date shown above. Any reproduction of technical data, computer software, or portions thereof marked with this legend must also reproduce the markings.
 
 (End of legend)
