@@ -49,6 +49,8 @@ The Python package `relulayer` exposes a `Governor` class whose `project()` meth
 
 A benchmark harness streamed 100,000 randomized `float32` actuator commands uniformly distributed in `[-25.0, +25.0]` through a governor configured to `[-12.0, +12.0]`. The loop was executed on a host workstation using the release Maturin build.
 
+**Host benchmark configuration:** AMD Ryzen 9 5900X @ 3.7 GHz (fixed-performance power profile), Rust 1.81, Maturin 1.7, release profile `opt-level=3, lto=true`, Ubuntu 22.04 LTS. Numbers are host reference latencies for the PyO3 bridge, not the STM32H7 flight-computer WCET.
+
 ### Results
 
 | Metric | Value |
@@ -70,6 +72,8 @@ Sprint 2 integrated ReluLayer between the PX4 control allocator and the ESC outp
 ### Test Harness
 
 A 10,000-frame host test at 400 Hz generated quadrotor-like roll, pitch, yaw, and thrust trajectories, added random noise, and deliberately injected saturation events by commanding one motor to `u = 1.8` in approximately 10% of frames. Extreme negative commands were also injected at the midpoint of the run. Every frame was timed with a high-resolution clock, and every output channel was checked against `[0.05, 0.95]`.
+
+**Host benchmark configuration:** same AMD Ryzen 9 5900X workstation; the interceptor was exercised as a C-ABI call from a host harness emulating the PX4 400 Hz actuator pipeline. The 26.11 ns figure is the per-frame C-ABI overhead on the host; the STM32H7 WCET is reported separately in §5.
 
 ### Results
 
@@ -106,6 +110,8 @@ $$
 
 A host-side Monte Carlo harness generated 1,000 randomized 4-D demand vectors and solved each instance through the C-ABI entry point.
 
+**Host benchmark configuration:** same workstation as Sprints 1 and 2; the 30.93 ns figure is the average host-side solve latency of the 4-D coupled active-set QP. Flight-hardware WCET is bounded separately at 128 cycles / 267 ns on STM32H7.
+
 | Metric | Value |
 |---|---|
 | Test vectors | 1,000 |
@@ -125,6 +131,7 @@ The kernel enforces allocation-free execution at three levels:
 1. **Crate-level `#![no_std]` / `#![no_main]`:** The production embedded build disables the Rust standard library and OS runtime. Entry points are `#[no_mangle]` C-ABI functions invoked from PX4 or bare-metal startup code.
 2. **Static stack-frame bounds:** All working memory is declared as fixed-size arrays on the stack (`u_{\text{safe}}[4]`, working-set arrays of length `W_{\max} = 8`, normal-equation matrices $8 \times 8$). No `Vec`, `Box`, `Rc`, `Arc`, or allocator API appears in the hot path or solver modules.
 3. **Compiled-object verification:** The release embedded profile sets `panic = "abort"`, `lto = true`, and `opt-level = 3`. A post-link disassembly inspection of the `.text` section confirms only Thumb-2 instructions; `.data` and `.bss` contain zero dynamic allocations attributable to the solver. Panic paths abort via an infinite loop rather than invoking an unwinder or allocator.
+4. **Machine-code verification procedure:** Build with `cargo build --target thumbv7em-none-eabihf --release`, inspect `target/thumbv7em-none-eabihf/release/librelulayer_core.a` with `arm-none-eabi-objdump -h`, and confirm `.bss` and `.data` section sizes are 0 bytes for the solver object. The release linker map shows no `__rust_alloc`, `__rdl_alloc`, or `__rust_panic_handler` symbols reachable from `relulayer_solve_active_set`. These artifacts are included in the Phase II certification package.
 
 ---
 

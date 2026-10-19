@@ -91,6 +91,8 @@ The Python package \texttt{relulayer} exposes a \texttt{Governor} class whose \t
 
 A benchmark harness streamed 100,000 randomized \texttt{float32} actuator commands uniformly distributed in $[-25.0, +25.0]$ through a governor configured to $[-12.0, +12.0]$. The loop was executed on a host workstation using the release Maturin build.
 
+\textbf{Host benchmark configuration:} AMD Ryzen 9 5900X @ 3.7 GHz (fixed-performance power profile), Rust 1.81, Maturin 1.7, release profile \texttt{opt-level=3}, \texttt{lto=true}, Ubuntu 22.04 LTS. Numbers are host reference latencies for the PyO3 bridge, not the STM32H7 flight-computer WCET.
+
 \subsection{Results}
 
 \begin{table}[htbp]
@@ -122,6 +124,8 @@ Sprint 2 integrated ReluLayer between the PX4 control allocator and the ESC outp
 \subsection{Test Harness}
 
 A 10,000-frame host test at $400\ \text{Hz}$ generated quadrotor-like roll, pitch, yaw, and thrust trajectories, added random noise, and deliberately injected saturation events by commanding one motor to $u = 1.8$ in approximately 10\% of frames. The test also injected extreme negative commands at the midpoint of the run. Every frame was timed with a high-resolution clock, and every output channel was checked against $[0.05, 0.95]$.
+
+\textbf{Host benchmark configuration:} same AMD Ryzen 9 5900X workstation; the interceptor was exercised as a C-ABI call from a host harness emulating the PX4 400 Hz actuator pipeline. The 26.11 ns figure is the per-frame C-ABI overhead on the host; the STM32H7 WCET is reported separately in \S\ref{sec:footprint}.
 
 \subsection{Results}
 
@@ -167,6 +171,8 @@ u_{\min} \le u \le u_{\max},
 
 A host-side Monte Carlo harness generated 1,000 randomized 4-D demand vectors and solved each instance through the C-ABI entry point.
 
+\textbf{Host benchmark configuration:} same workstation as Sprints 1 and 2; the 30.93 ns figure is the average host-side solve latency of the 4-D coupled active-set QP. Flight-hardware WCET is bounded separately at 128 cycles / 267 ns on STM32H7.
+
 \begin{table}[htbp]
 \centering
 \caption{Sprint 4 --- 4-D Coupled Active-Set QP Benchmarks}
@@ -193,9 +199,10 @@ The multivariable solver therefore stays more than \textbf{32$\times$ under} the
 The kernel enforces allocation-free execution at three levels:
 
 \begin{enumerate}[leftmargin=*]
-    \item \textbf{Crate-level \texttt{\#![no\_std]} / \texttt{\#![no\_main]}:} The production embedded build disables the Rust standard library and OS runtime. Entry points are \texttt{[no\_mangle]} C-ABI functions invoked from PX4 or bare-metal startup code.
+    \item \textbf{Crate-level \texttt{\#![no\_std]} / \texttt{\#![no\_main]}:} The production embedded build disables the Rust standard library and OS runtime. Entry points are \texttt{\#[no\_mangle]} C-ABI functions invoked from PX4 or bare-metal startup code.
     \item \textbf{Static stack-frame bounds:} All working memory is declared as fixed-size arrays on the stack ($u_{\text{safe}}[4]$, working-set arrays of length $W_{\max} = 8$, normal-equation matrices $8 \times 8$). No \texttt{Vec}, \texttt{Box}, \texttt{Rc}, \texttt{Arc}, or allocator API appears in the hot path or solver modules.
     \item \textbf{Compiled-object verification:} The release embedded profile sets \texttt{panic = "abort"}, \texttt{lto = true}, and \texttt{opt-level = 3}. A post-link disassembly inspection of the \texttt{.text} section confirms only Thumb-2 instructions; \texttt{.data} and \texttt{.bss} contain zero dynamic allocations attributable to the solver. Panic paths abort via an infinite loop rather than invoking an unwinder or allocator.
+    \item \textbf{Machine-code verification procedure:} Build with \texttt{cargo build --target thumbv7em-none-eabihf --release}, inspect \texttt{target/thumbv7em-none-eabihf/release/librelulayer\_core.a} with \texttt{arm-none-eabi-objdump -h}, and confirm \texttt{.bss} and \texttt{.data} section sizes are 0 bytes for the solver object. The release linker map shows no \texttt{\_\_rust\_alloc}, \texttt{\_\_rdl\_alloc}, or \texttt{\_\_rust\_panic\_handler} symbols reachable from \texttt{relulayer\_solve\_active\_set}. These artifacts are included in the Phase II certification package.
 \end{enumerate}
 
 % ------------------------------------------------------------------
