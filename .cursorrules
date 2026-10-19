@@ -1,0 +1,73 @@
+# ReluLayer™ Root Cursor Rules — Authoritative Agent Governance
+
+> This is the workspace-level `.cursorrules` for the ReluLayer™ primary monorepo. It governs every agent interaction. The canonical product baseline is `PRD.md` in this repository. For entity identifiers, refer to `Organizations/AtelierLogicGroup/00-governance/entity-identity.md`.
+
+## 1. Identity, Role & Product Framing
+
+- You are operating on **ReluLayer™**, a deterministic **Edge Governor** and **Execution Gatekeeper** for autonomous AI agents, LLM tool calling, and Physical Super Intelligence (Physical SI) actuator loops.
+- The kernel is pure `#![no_std]` Rust; probabilistic layers may plan, but ReluLayer™ authorizes execution deterministically.
+- Do not anthropomorphize the kernel. Avoid words like "reflexes", "thoughts", "instincts", or "believes".
+
+## 2. Author Provenance & Commit Attribution
+
+- Every commit must be authored by:
+  ```text
+  ishmaelamin <ishmael.amin@outlook.com>
+  ```
+- Strictly prohibited in any commit message or trailer:
+  - `Co-authored-by: Cursor`
+  - `Co-authored-by: GitHub Copilot`
+  - Any bot, assistant, or automated-author attribution.
+- Use [Conventional Commits](https://www.conventionalcommits.org/):
+  - `docs(prd): ...`
+  - `feat(core): ...`
+  - `fix(security): ...`
+  - `ci(actions): ...`
+
+## 3. Dual-Repository Parity
+
+- `/home/iamin/Dist/relulayer-oss` (public mirror) and `/home/iamin/Organizations/ReluLayer` (primary monorepo) must remain synchronized for all files that exist in both workspaces.
+- When you modify `PRD.md` or `.cursorrules` in one repository, mirror the identical content to the other before pushing.
+- The public mirror is the open-core wedge only. Never copy proprietary monorepo content (`pendulum_sim.rs`, `veristate`, `20-pilots-and-proposals/`, `AtelierLogicGroup/`) into the public mirror.
+
+## 4. Architectural Non-Negotiables
+
+- `#![no_std]` first for all safety-critical crates.
+- Zero dynamic heap allocations on authorization / hot paths.
+- Bounded stack allocations must stay < 1 KB per call.
+- Sub-microsecond latency ceiling for the micro-action fast path.
+- Production builds use `panic = "abort"`, `lto = true`, `opt-level = 3`.
+- Embedded targets: trap `_sbrk` to `ENOMEM`; no global allocator.
+
+## 5. PyO3 & FFI Contract
+
+- Action identifiers and payloads are raw `bytes` (`&[u8]` in Rust, `bytes` in Python).
+- Verification failures raise `ValueError` in Python or return a negative FFI code.
+- Never design the API so that authorization success/failure is returned as a plain boolean that can be ignored.
+- Use PyO3 0.23+ smart-pointer signatures (`&Bound<'_, PyModule>`).
+
+## 6. Nomenclature & Branding
+
+- Product name: **ReluLayer™**.
+- Categories: **Edge Governor**, **Execution Gatekeeper**.
+- Federal / defense references: **Physical Super Intelligence (Physical SI)**.
+- Entity: **Atelier Logic Group LLC dba ReluLayer™** — CAGE `20JX8`, UEI `G9WFN3AL69J3`.
+
+## 7. SCM & Index Discipline
+
+- Stage explicit paths only. `git add .`, `git add -A`, and `git add *` are forbidden.
+- Never commit `target/`, `node_modules/`, `.venv/`, build artifacts, transient caches, compiled dynamic libraries, or Windows `Zone.Identifier` files.
+- Verify `git status` is clean after every commit.
+- Before pushing, run `git diff --stat` and confirm only intended files are included.
+
+## 8. Safety-Critical Code Style
+
+- Prefer deterministic algorithms over probabilistic heuristics on the hot path.
+- Static stack arrays only; no `Vec`, `Box`, or `HashMap` in `#![no_std]` paths.
+- All arithmetic in `relulayer-core` embedded target uses Q16.16 fixed-point or carefully bounded `f32`; never `f64` in the bare-metal kernel.
+- Symplectic auditor invariant: `det(J) == 1.0` within tolerance where applicable.
+
+## 9. Documentation & Traceability
+
+- `PRD.md` is the authoritative source of truth. Engineering changes must be traceable to it.
+- For subprojects with their own `.cursorrules` (e.g., `relulayer-engine/`, `sbir-digital-twin/`, `sbir-gtm-websites/`), follow those rules when working inside those directories; they specialize but may not override the provenance and parity mandates above.

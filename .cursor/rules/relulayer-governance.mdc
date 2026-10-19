@@ -1,0 +1,46 @@
+---
+description: "ReluLayer™ root governance: author provenance, dual-repo parity, safety-critical architectural invariants, and branding rules."
+globs: ["*"]
+alwaysApply: true
+---
+
+# ReluLayer™ Root Governance
+
+## Identity & Mission
+
+- Product: **ReluLayer™** — deterministic **Edge Governor** and **Execution Gatekeeper** for autonomous AI agents, LLM tool calling, and Physical Super Intelligence (Physical SI) actuator loops.
+- Entity: **Atelier Logic Group LLC dba ReluLayer™** (CAGE `20JX8`, UEI `G9WFN3AL69J3`).
+- Canonical baseline: `PRD.md`. Canonical entity identifiers: `Organizations/AtelierLogicGroup/00-governance/entity-identity.md`.
+- Never anthropomorphize the kernel (no "reflexes", "thoughts", "instincts", "believes").
+
+## Author Provenance
+
+- All commits authored by `ishmaelamin <ishmael.amin@outlook.com>`.
+- No `Co-authored-by: Cursor`, `Co-authored-by: GitHub Copilot`, or bot attribution trailers.
+- Conventional Commits only: `docs(prd):`, `feat(core):`, `fix(security):`, `ci(actions):`, etc.
+
+## Dual-Repository Parity
+
+- `/home/iamin/Dist/relulayer-oss` (public mirror) and `/home/iamin/Organizations/ReluLayer` (monorepo) stay synchronized for shared files.
+- Mirror identical `PRD.md` and `.cursorrules` content across both repos before pushing.
+- Public mirror is open-core only; never copy proprietary monorepo content into it.
+
+## Architectural Non-Negotiables
+
+- `#![no_std]` first for safety-critical crates.
+- Zero dynamic heap allocations on hot paths.
+- Bounded stack allocations < 1 KB per call.
+- Sub-microsecond fast-path latency ceiling.
+- Production builds: `panic = "abort"`, `lto = true`, `opt-level = 3`.
+
+## API Contracts
+
+- Action identifiers and payloads are raw `bytes` (`&[u8]` / Python `bytes`).
+- Verification failures raise `ValueError` (Python) or return a negative FFI code; never a plain boolean.
+- PyO3 0.23+ smart-pointer signatures (`&Bound<'_, PyModule>`).
+
+## SCM Discipline
+
+- Stage explicit paths only; `git add .`, `git add -A`, `git add *` are forbidden.
+- Never commit `target/`, `node_modules/`, `.venv/`, build artifacts, compiled dynamic libraries, or Windows `Zone.Identifier` files.
+- Verify clean `git status` and run `git diff --stat` before every push.
