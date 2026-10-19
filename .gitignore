@@ -190,7 +190,21 @@ Thumbs.db
 # -------------------------------------------------------------
 # Internal Proposals, Pilots, and Private Documents
 # -------------------------------------------------------------
-20-pilots-and-proposals/
+
+# Ignore all proposal contents by default, then explicitly un-ignore canonical
+# AFWERX Direct-to-Phase II source deliverables (topic DAF26BX06-DV026).
+# NOTE: un-ignore patterns must come AFTER the ignore rule they negate, and the
+# parent directory itself must not be excluded (use trailing /* not /).
+20-pilots-and-proposals/*
+!20-pilots-and-proposals/daf-drone-swarms/
+!20-pilots-and-proposals/daf-drone-swarms/feasibility/
+!20-pilots-and-proposals/daf-drone-swarms/feasibility/feasibility_report.md
+!20-pilots-and-proposals/daf-drone-swarms/feasibility/feasibility_report.tex
+!20-pilots-and-proposals/daf-drone-swarms/qa_responses/
+!20-pilots-and-proposals/daf-drone-swarms/qa_responses/dsip_qa_compliance.md
+!20-pilots-and-proposals/daf-drone-swarms/technical_volume/
+!20-pilots-and-proposals/daf-drone-swarms/technical_volume/sow_milestones.md
+
 30-tools-and-ops/
 proposals/
 pilots/

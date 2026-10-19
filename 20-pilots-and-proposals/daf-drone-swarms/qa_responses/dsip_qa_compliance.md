@@ -2,7 +2,10 @@
 
 **Topic:** `DAF26BX06-DV026` — Ground and Air Launched Drone Swarms Create a Self-Protecting Perimeter Using Autonomous AI  
 **Company:** Atelier Logic Group LLC dba ReluLayer™  
-**CAGE:** `20JX8` | **UEI:** `G9WFN3AL69J3`
+**CAGE:** `20JX8` | **UEI:** `G9WFN3AL69J3`  
+**Contract No.:** DAF26BX06-DV026 (Pending)  
+**Primary URLs:** https://relulayer.ai | https://atelierlogicgroup.com  
+**Public Dual-Use Repositories:** https://github.com/ReluLayer/relulayer | https://pypi.org/project/relulayer/
 
 ---
 
@@ -110,11 +113,13 @@ GovernmentPurpose Rights are available for Phase II deliverables, with negotiate
 
 SBIR DATA RIGHTS
 
-Contract Number: [TBD]
+Contract Number: DAF26BX06-DV026 (Pending)
 Contractor: Atelier Logic Group LLC dba ReluLayer™
-Contractor Address: 32 Normandy Dr, Kenner, LA 70065-2031 USA
+Physical Address: 32 Normandy Drive, Kenner, LA 70065
+Mailing Address: 201 Saint Charles Ave., Ste 114 PMB 603, New Orleans, LA 70170
 CAGE: 20JX8
 UEI: G9WFN3AL69J3
+DFARS 252.227-7018
 Expiration of SBIR Data Protection Period: October 21, 2046
 Expiration of Government Purpose Rights Period: Perpetual upon expiration of SBIR data protection period
 

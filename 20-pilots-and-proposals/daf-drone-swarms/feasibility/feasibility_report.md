@@ -4,7 +4,9 @@
 **Company:** Atelier Logic Group LLC dba ReluLayer™  
 **CAGE:** `20JX8` | **UEI:** `G9WFN3AL69J3`  
 **Submission Deadline:** October 21, 2026  
-**URL:** https://relulayer.com  
+**Primary URLs:** https://relulayer.ai | https://atelierlogicgroup.com  
+**Public Dual-Use Repositories:** https://github.com/ReluLayer/relulayer | https://pypi.org/project/relulayer/  
+**Contract No.:** DAF26BX06-DV026 (Pending)  
 
 ---
 
@@ -181,8 +183,10 @@ These results map directly to the DAF26BX06-DV026 evaluator concerns of swarm sa
 
 Contract No.: DAF26BX06-DV026 (Pending)
 Contractor Name: Atelier Logic Group LLC dba ReluLayer™
-Contractor Address: 100 Enterprise Way, Suite 300, Austin, TX 78701
+Physical Address: 32 Normandy Drive, Kenner, LA 70065
+Mailing Address: 201 Saint Charles Ave., Ste 114 PMB 603, New Orleans, LA 70170
 CAGE: 20JX8 | UEI: G9WFN3AL69J3
+DFARS 252.227-7018
 Expiration of SBIR Data Rights Period: October 21, 2046
 
 The Government's rights to use, modify, reproduce, release, perform, display, or disclose technical data or computer software marked with this legend are restricted during the period shown as provided in paragraph (b)(4) of the Rights in Noncommercial Technical Data and Computer Software--Small Business Innovation Research (SBIR) Program clause contained in the above identified contract. No restrictions apply after the expiration date shown above. Any reproduction of technical data, computer software, or portions thereof marked with this legend must also reproduce the markings.
