@@ -12,6 +12,12 @@
 \usepackage{enumitem}
 \usepackage{caption}
 \usepackage{multirow}
+\usepackage{microtype}
+\usepackage{xurl}
+\usepackage{tabularx}
+\setlength{\emergencystretch}{3em}
+\tolerance=2000
+\hbadness=2000
 
 \hypersetup{
     colorlinks=true,
@@ -23,13 +29,15 @@
 }
 
 \title{\textbf{Direct-to-Phase II Feasibility Volume}\\[0.5em]
-\large Topic DAF26BX06-DV026: Ground and Air Launched Drone Swarms Create a Self-Protecting Perimeter Using Autonomous AI}
+\large Topic DAF26BX06-DV026: Ground and Air Launched Drone Swarms\\
+Create a Self-Protecting Perimeter Using Autonomous AI}
 \author{\textbf{Atelier Logic Group LLC dba ReluLayer\textsuperscript{TM}}\\
 CAGE: 20JX8 \quad UEI: G9WFN3AL69J3\\
 Physical Address: 32 Normandy Drive, Kenner, LA 70065\\
 Mailing Address: 201 Saint Charles Ave., Ste 114 PMB 603, New Orleans, LA 70170\\
 \url{https://relulayer.ai} \quad \url{https://atelierlogicgroup.com}\\
-Open Source: \url{https://github.com/ReluLayer/relulayer} \quad PyPI: \url{https://pypi.org/project/relulayer/}\\
+Open Source: \url{https://github.com/ReluLayer/relulayer}\\
+PyPI: \url{https://pypi.org/project/relulayer/}\\
 \href{mailto:founder@relulayer.com}{founder@relulayer.com}}
 \date{October 21, 2026}
 
@@ -56,7 +64,7 @@ Ground- and air-launched autonomous swarms executing self-protecting perimeter d
 
 Existing swarm architectures rely heavily on centralized planners or inter-agent RF coordination to prevent these outcomes. Under jamming, multipath, or reduced data-rate links, the safety margin collapses. ReluLayer addresses this by embedding a formally bounded, zero-heap, zero-communication safety governor directly at the edge of every drone's autopilot.
 
-\subsection{Air-Drop Deployment \& Swarm Scale Compliance (Oct 4 DSIP Q\&A)}
+\subsection[Air-Drop \& Swarm Scale Compliance]{Air-Drop Deployment \& Swarm Scale Compliance (Oct 4 DSIP Q\&A)}
 \label{subsec:qa}
 
 The ReluLayer-governed swarm is designed explicitly for the air-launched operational envelope defined in the \textbf{October 4, 2026 DSIP Q\&A}:
@@ -89,7 +97,7 @@ A benchmark harness streamed 100,000 randomized \texttt{float32} actuator comman
 \centering
 \caption{Sprint 1 --- PyO3 Simulation Bridge Benchmarks}
 \label{tab:sprint1}
-\begin{tabular}{@{}ll@{}}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
@@ -99,7 +107,7 @@ Latency budget & $<1.0\ \mu\text{s}$ \\
 Boundary violations & 0 \\
 Dynamic heap allocations on hot path & 0 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 The result satisfies the $<1\ \mu\text{s}$ simulation-loop budget by more than an order of magnitude, confirming that formal safety enforcement can be inserted between an RL policy and the environment with negligible overhead.
@@ -121,7 +129,7 @@ A 10,000-frame host test at $400\ \text{Hz}$ generated quadrotor-like roll, pitc
 \centering
 \caption{Sprint 2 --- PX4 Mixer Interceptor Benchmarks}
 \label{tab:sprint2}
-\begin{tabular}{@{}ll@{}}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
@@ -133,13 +141,13 @@ Deliberate saturation injections & $\approx 1{,}000$ \\
 Channel clip events & 27,666 \\
 Bound violations outside $[0.05, 0.95]$ & 0 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 Even under deliberate over-saturation, every channel produced by the interceptor remained inside the commanded flight envelope, and the latency consumed less than one thousandth of one percent of the $400\ \text{Hz}$ frame budget.
 
 % ------------------------------------------------------------------
-\section{Sprint 4 --- Multivariable 4-D Coupled QP Solver \& Zero-Heap Discipline}
+\section[Sprint 4 --- Multivariable 4-D QP Solver]{Sprint 4 --- Multivariable 4-D Coupled QP Solver \& Zero-Heap Discipline}
 % ------------------------------------------------------------------
 \label{sec:sprint4}
 
@@ -163,7 +171,7 @@ A host-side Monte Carlo harness generated 1,000 randomized 4-D demand vectors an
 \centering
 \caption{Sprint 4 --- 4-D Coupled Active-Set QP Benchmarks}
 \label{tab:sprint4}
-\begin{tabular}{@{}ll@{}}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
 \toprule
 \textbf{Metric} & \textbf{Value} \\
 \midrule
@@ -175,7 +183,7 @@ Latency budget & $< 1{,}000\ \text{ns}$ \\
 Box-bound violations & 0 \\
 Converged to optimal & 1,000 / 1,000 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 The multivariable solver therefore stays more than \textbf{32$\times$ under} the $1\ \mu\text{s}$ host-side budget, leaving headroom for PX4 mixer integration and RF-contested operations.
@@ -201,7 +209,7 @@ ReluLayer is architected for the flight computers already deployed on Group 1--3
 \centering
 \caption{ReluLayer Core Resource Footprint on STM32H7 / Pixhawk 6X}
 \label{tab:footprint}
-\begin{tabular}{@{}ll@{}}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
 \toprule
 \textbf{Attribute} & \textbf{Value} \\
 \midrule
@@ -212,7 +220,7 @@ Dynamic heap allocation & $0\ \text{bytes}$ \\
 Stack-only operation & Yes \\
 Target flight computer & Pixhawk 6X / STM32H743 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 A 54-byte instruction footprint and 128-cycle WCET mean the governor can run inside the PX4 \texttt{actuator\_outputs} pipeline without requiring additional MCU, co-processor, FPGA, or memory. This directly preserves SWaP-C budgets on small attritable platforms.
@@ -233,7 +241,7 @@ The kernel is accompanied by an AWS Kani bounded model checking harness. Kani sy
 \centering
 \caption{AWS Kani Bounded Model Checking Proof Matrix}
 \label{tab:kani}
-\begin{tabular}{@{}llll@{}}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}X p{1.6cm}p{2.4cm}@{}}
 \toprule
 \textbf{Proof ID} & \textbf{Property} & \textbf{Status} & \textbf{Standard} \\
 \midrule
@@ -243,7 +251,7 @@ K-03 & No division by zero or unconstrained state & Verified & DO-333 FM.2 \\
 K-04 & Deterministic WCET ($\le 10$ iterations) & Verified & DO-178C \S6.4 \\
 K-05 & Inductive active-set streaming equivalence \& bounded step invariants without heap allocation (Audit Decision 5) & Verified & DO-333 FM.3 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 All five proofs pass with Kani's default bounded unwinding. \textbf{Audit Decision 5} specifically adds inductive AWS Kani bounded model checking harnesses that prove active-set streaming equivalence and bounded inductive step invariants without heap allocation, strengthening the DO-178C Level A / DO-333 software verification evidence package. The proof artifacts, harness source, and traceable requirements will be delivered as part of the Phase II certification package.

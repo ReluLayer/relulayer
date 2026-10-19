@@ -66,7 +66,7 @@ No operating-system patches or custom drivers are required.
 
 | Tier | Scope | License / Rights |
 |---|---|---|
-| **Open-source community bridges** | `relulayer-py` PyO3 bindings, example notebooks, benchmark harnesses | Apache-2.0 OR MIT — encourages academic and industry adoption |
+| **Open-source community bridges** | `relulayer-py` PyO3 bindings, example notebooks, benchmark harnesses | Apache-2.0 OR MIT — encourages research and industry adoption |
 | **Proprietary high-assurance flight core** | `relulayer-core` kernel, `bridges/px4-mixer` interceptor, DO-178C/DO-333 artifacts | DFARS SBIR Data Rights (FAR 52.227-20 / DFARS 252.227-7018); protected proprietary data for 20 years |
 
 GovernmentPurpose Rights are available for Phase II deliverables, with negotiated licensing for production transition.
