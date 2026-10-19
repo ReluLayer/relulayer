@@ -47,6 +47,7 @@ This Statement of Work (SOW) describes the 12-month Phase II execution plan for 
 
 ### Technical Activities
 - Generalize the active-set kernel to handle coupled linear constraints across four actuator/moment dimensions.
+- Implement rotor-out / partial-airframe-loss reconfiguration: when a motor failure is detected, the interceptor recomputes the active set on the surviving 3-D moment polytope by dropping the lost channel from $A u \le b$ and tightening the remaining thrust/moment constraints so the degraded airframe remains flyable without central coordination.
 - Maintain `#![no_std]`, zero-heap allocation, and deterministic WCET.
 - Update AWS Kani proof harnesses to cover the 4-D coupled solver.
 - Deploy the solver on Pixhawk 6X hardware-in-the-loop (HIL) benches.
@@ -68,20 +69,22 @@ This Statement of Work (SOW) describes the 12-month Phase II execution plan for 
 **Objective:** Validate ReluLayer on actual airframes during captive ground tests and outdoor swarm flights under GPS-denied perimeter breach scenarios.
 
 ### Technical Activities
-- Install ReluLayer on 5–10 small UAS airframes (quadrotor and/or VTOL configurations).
+- Install ReluLayer on 10–15 small UAS airframes (quadrotor and/or VTOL configurations), consistent with the cost-volume airframe allocation and the DSIP Q&A ≥10-agent minimum.
 - Execute captive ground tests with motors spinning under commanded saturation.
 - Conduct outdoor swarm flights at an approved test range, including GPS-denied segments induced by jamming or indoor transition.
+- Demonstrate degraded-mode perimeter recovery after simulated single-motor failure on one swarm member; log the reconfigured constraint polytope and the zero bound-violation outcome.
 - Capture flight logs, video, and safety telemetry.
 
 ### Deliverables
 - `D3.1` Flight-test plan and range-safety package.
 - `D3.2` Captive ground test report with 0 bound violations.
-- `D3.3` Outdoor swarm flight demo report (5–10 airframes) with video and log archive.
+- `D3.3` Outdoor swarm flight demo report (10–15 airframes) with video and log archive.
 
 ### Acceptance Criteria
 - All live-fly actuator commands remain inside configured limits.
 - No loss-of-control events attributable to saturation.
 - Swarm recovers perimeter integrity after GPS-denied breach injection.
+- At least 10 airframes simultaneously governed in the outdoor demonstration.
 
 ---
 
@@ -114,8 +117,28 @@ This Statement of Work (SOW) describes the 12-month Phase II execution plan for 
 |---|---|---|---|
 | M1: SITL Swarm Integration | 1–3 | 50-drone Gazebo/Isaac Sim demo | Latency < 1 µs, 0 violations |
 | M2: 4-D Coupled Solver HIL | 4–6 | Pixhawk 6X HIL benchmark | WCET < 1 µs, Kani 4/4 |
-| M3: Live-Fly Demonstrations | 7–9 | 5–10 airframe outdoor demo | 0 saturation-related LOC events |
+| M3: Live-Fly Demonstrations | 7–9 | 10–15 airframe outdoor demo | 0 saturation-related LOC events; ≥10 airframes simultaneously governed |
 | M4: DO-178C/DO-333 Package | 10–12 | Flight-release evidence package | Government concurrence |
+
+---
+
+## Deliverable-to-DID Mapping
+
+| ReluLayer Deliverable | DoD DID / Standard | Description |
+|---|---|---|
+| `D1.1` SITL integration package | DI-IPSC-81431 (SRS) / SITL artifacts | Simulation requirements and build package |
+| `D1.2` 50-drone demo | — | Demonstration video and log archive |
+| `D1.3` Empirical report | DI-MGMT-81336 (Test Report) | SITL test report |
+| `D2.1` Updated `relulayer-core` | DI-IPSC-81432 (SDD) | Software design description |
+| `D2.2` Kani proof matrix | DO-333 FM credits | Formal methods evidence |
+| `D2.3` HIL benchmark report | DI-MGMT-81336 | HIL test report |
+| `D3.1` Flight-test plan | DI-SAFT-81065 / D3.4 | System Safety Hazard Analysis / Range Safety Plan |
+| `D3.2` Ground test report | DI-MGMT-81336 | Captive test report |
+| `D3.3` Outdoor demo report | DI-MGMT-81336 | Flight demo report |
+| `D4.1` Certification package | DO-178C Level A / DO-333 | Verification evidence package |
+| `D4.2` Traceability matrix | DI-IPSC-81434 (SVCP) / custom | Requirements-to-code-to-proof matrix |
+| `D4.3` Final technical report | DI-MGMT-81337 | Final report |
+| `D4.4` License & data-rights schedule | DFARS 252.227-7018 | IP transition schedule |
 
 ---
 
