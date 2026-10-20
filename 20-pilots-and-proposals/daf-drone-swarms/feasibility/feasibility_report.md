@@ -12,7 +12,7 @@
 
 ## Abstract
 
-This Feasibility Volume demonstrates prior Phase I equivalency for AFWERX Direct-to-Phase II topic `DAF26BX06-DV026`. ReluLayer™ is a deterministic, sub-microsecond physical safety governor for autonomous drone swarms. It executes entirely at the flight-control edge, requires no inter-vehicle RF coordination for boundary enforcement, and is already integrated with both Python reinforcement-learning simulation pipelines and the PX4 autopilot C++ mixer. Empirical results from Sprints 1, 2, and 4 show sub-microsecond latency on both the Python bridge and PX4 mixer paths, 30.93 ns host solve latency for the 4-D coupled QP, zero bound violations under deliberate saturation, and a 54-byte Thumb-2 instruction footprint suitable for DO-178C Level A / DO-333 certification.
+This Feasibility Volume demonstrates prior Phase I equivalency for AFWERX Direct-to-Phase II topic `DAF26BX06-DV026`. ReluLayer™ is a deterministic, sub-microsecond physical safety governor for autonomous drone swarms. It executes entirely at the flight-control edge, requires no inter-vehicle RF coordination for boundary enforcement, and is already integrated with both Python reinforcement-learning simulation pipelines and the PX4 autopilot C++ mixer. Empirical results from Sprints 1, 2, and 4 show sub-microsecond latency on both the Python bridge and PX4 mixer paths, 30.93 ns host solve latency for the 4-D coupled QP, and zero bound violations under deliberate saturation. The scalar per-channel governor entry point (`relulayer_solve_active_set`) compiles to a 54-byte Thumb-2 instruction footprint; the 4-D coupled QP solver is a larger, separately compiled module and is the subject of the host benchmark. The combined kernel is architected for DO-178C Level A / DO-333 certification.
 
 ---
 
@@ -110,7 +110,7 @@ $$
 
 A host-side Monte Carlo harness generated 1,000 randomized 4-D demand vectors and solved each instance through the C-ABI entry point.
 
-**Host benchmark configuration:** same workstation as Sprints 1 and 2; the 30.93 ns figure is the average host-side solve latency of the 4-D coupled active-set QP. Flight-hardware WCET is bounded separately at 128 cycles / 267 ns on STM32H7.
+**Host benchmark configuration:** same workstation as Sprints 1 and 2; the 30.93 ns figure is the average host-side solve latency of the 4-D coupled active-set QP. The scalar per-channel flight-hardware entry point is bounded at 128 cycles / 267 ns on STM32H7; the 4-D coupled QP flight-hardware WCET will be measured and bounded in Phase II.
 
 | Metric | Value |
 |---|---|
@@ -123,6 +123,10 @@ A host-side Monte Carlo harness generated 1,000 randomized 4-D demand vectors an
 | Converged to optimal | 1,000 / 1,000 |
 
 The multivariable solver therefore stays more than **32× under** the 1 µs host-side budget, leaving headroom for PX4 mixer integration and RF-contested operations.
+
+### Nominal vs. Degraded Operation
+
+In the nominal path, the 4-D solver enforces both per-channel bounds and the coupled linear inequality (e.g., total-thrust ceiling). If numerical degeneracy or an infeasible initial point is encountered, the kernel falls back to an independent per-channel clamp that preserves per-channel bounds and commands a safe hold. The coupled constraint is then reasserted on the next valid cycle. This degraded-mode behavior is explicitly bounded and documented in the software safety analysis, which will be delivered as part of the Phase II DO-178C Level A / DO-333 evidence package.
 
 ### Zero-Heap Discipline
 
@@ -141,14 +145,14 @@ ReluLayer is architected for the flight computers already deployed on Group 1–
 
 | Attribute | Value |
 |---|---|
-| Instruction flash footprint (Thumb-2) | **54 B** |
-| Worst-case execution cycles | **128 cycles** |
-| Worst-case execution time at 480 MHz | **≈ 267 ns** |
+| Scalar governor entry-point flash footprint (Thumb-2) | **54 B** |
+| Worst-case execution cycles for scalar entry point | **128 cycles** |
+| Worst-case execution time for scalar entry point at 480 MHz | **≈ 267 ns** |
 | Dynamic heap allocation | **0 bytes** |
 | Stack-only operation | Yes |
 | Target flight computer | Pixhawk 6X / STM32H743 |
 
-A 54-byte instruction footprint and 128-cycle WCET mean the governor runs inside the PX4 `actuator_outputs` pipeline without an additional MCU, co-processor, FPGA, or memory.
+A 54-byte instruction footprint for the scalar per-channel entry point and a 128-cycle WCET for that entry point mean the governor's hot path runs inside the PX4 `actuator_outputs` pipeline without an additional MCU, co-processor, FPGA, or memory. The 4-D coupled QP solver validated in Sprint 4 is a separate module and is exercised in the Python/C host environment; its flight-computer WCET will be measured and bounded in Phase II.
 
 ### Kinetic, SWaP-C, and Swarm-Scale Bound Compliance
 
@@ -165,7 +169,7 @@ The kernel is accompanied by an AWS Kani bounded model checking harness. Kani sy
 | K-01 | No panics on any finite input | Verified | DO-333 FM.1 |
 | K-02 | Output bounded inside actuator limits | Verified | DO-178C §6.4 |
 | K-03 | No division by zero or unconstrained state | Verified | DO-333 FM.2 |
-| K-04 | Deterministic WCET (≤ 10 iterations) | Verified | DO-178C §6.4 |
+| K-04 | Deterministic iteration bound (≤ 20 iterations for 4-D coupled QP; scalar entry point terminates in 1 iteration) | Verified | DO-178C §6.4 |
 | K-05 | Inductive active-set streaming equivalence & bounded step invariants without heap allocation (Audit Decision 5) | Verified | DO-333 FM.3 |
 
 All five proofs pass with Kani's default bounded unwinding. **Audit Decision 5** specifically adds inductive AWS Kani bounded model checking harnesses that prove active-set streaming equivalence and bounded inductive step invariants without heap allocation, strengthening the DO-178C Level A / DO-333 software verification evidence package.
@@ -179,7 +183,7 @@ ReluLayer has already satisfied the technical risk-reduction objectives normally
 - A formally verified, zero-heap active-set kernel in `#![no_std]` Rust.
 - Sub-microsecond Python bridge latency validated over 100,000 simulation steps.
 - PX4 mixer integration validated at 400 Hz with zero bound breaches under saturation.
-- A 54-byte bare-metal footprint and 128-cycle WCET compatible with fielded Pixhawk 6X hardware.
+- A 54-byte bare-metal footprint for the scalar governor entry point and a 128-cycle WCET for that entry point, compatible with fielded Pixhawk 6X hardware.
 - A 4-D coupled active-set QP solver validated at 30.93 ns average latency over 1,000 Monte Carlo test vectors.
 
 These results map directly to the DAF26BX06-DV026 evaluator concerns of swarm safety, autonomy at the edge, RF resilience, and transition speed.
