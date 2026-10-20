@@ -190,6 +190,41 @@ These results map directly to the DAF26BX06-DV026 evaluator concerns of swarm sa
 
 ---
 
+## References
+
+1. U.S. Air Force / AFWERX SBIR Topic DAF26BX06-DV026,
+*Ground and Air Launched Drone Swarms Create a Self-Protecting Perimeter
+Using Autonomous AI*, DoD SBIR Direct-to-Phase II solicitation.
+
+2. RTCA DO-178C, *Software Considerations in Airborne Systems and Equipment
+Certification*, 2011; and RTCA DO-333, *Formal Methods Supplement to DO-178C
+and DO-278A*, 2011.
+
+3. U.S. Department of Defense, MIL-STD-882E, *Standard Practice for System
+Safety*, 2012.
+
+4. NIST Special Publication 800-171 Rev 2, *Protecting Controlled Unclassified
+Information in Nonfederal Systems and Organizations*, 2020.
+
+5. Defense Federal Acquisition Regulation Supplement (DFARS) 252.227-7013
+(*Rights in Technical Data—Noncommercial Items*) and 252.227-7992 (*Rights in
+Computer Software and Computer Software Documentation*).
+
+6. Defense Federal Acquisition Regulation Supplement (DFARS) 252.227-7018,
+*Rights in Noncommercial Technical Data and Computer Software—Small Business
+Innovation Research (SBIR) Program*.
+
+7. Defense Federal Acquisition Regulation Supplement (DFARS) 252.204-7019 and
+252.204-7020, CMMC / SPRS requirements.
+
+8. Atelier Logic Group LLC dba ReluLayer™, ACCSE™ / ReluLayer™ technical
+baseline, HIL telemetry, and patent-pending background IP estate (PPA I Ser.
+No. 64/021,087; PPA II Ser. No. 64/058,892; PPA III Ser. No. 64/063,132;
+PPA IV Ser. No. 64/067,735; PPA V Ser. No. 64/095,530; PPA VI Ser. No.
+64/124,094; PPA VII Ser. No. 64/127,611).
+
+---
+
 **SBIR DATA RIGHTS**
 
 Contract No.: DAF26BX06-DV026 (Pending)
