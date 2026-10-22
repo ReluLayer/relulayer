@@ -15,7 +15,9 @@ pub use core_math::*;
 pub mod multivar_4d;
 pub use multivar_4d::*;
 
+#[cfg(feature = "internal-extras")]
 pub mod pendulum_sim;
+#[cfg(feature = "internal-extras")]
 pub mod benchmark_harness;
 
 #[cfg(kani)]

@@ -1,9 +1,11 @@
 [package]
 name = "relulayer-security"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["ReluLayer Red Team Hardening"]
 description = "Zero-heap, #[no_std] boundary interceptor for AI agent action authorization."
+license = "MIT OR Apache-2.0"
+publish = false
 
 [lib]
 crate-type = ["rlib", "staticlib"]

@@ -70,9 +70,11 @@ pub fn verify_infeasible_fallback_boundedness() {
 
     kani::assume(!u_raw.is_nan() && !u_raw.is_infinite());
 
+    // First half-space is u <= -30; box [-20, 20] lies entirely above it,
+    // so the solver must detect infeasibility and return a bounded relaxed point.
     let constraints = LinearConstraints {
         a: [1.0, -1.0, 1.0, -1.0],
-        b: [-10.0, -15.0, 100.0, 100.0],
+        b: [-30.0, -15.0, 100.0, 100.0],
     };
 
     let limits = ActuatorLimits { u_min, u_max };

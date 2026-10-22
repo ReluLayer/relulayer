@@ -33,6 +33,9 @@ pub mod crypto;
 pub mod limits;
 pub mod sha;
 
+#[cfg(kani)]
+pub mod kani_proofs;
+
 /// Errors returned by the boundary interceptor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]

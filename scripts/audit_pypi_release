@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+#
+# PyPI Release Audit Script for relulayer
+#
+# Builds the source distribution and wheel locally, verifies the wheel can be
+# rebuilt from the published sdist, inspects their contents, and fails if
+# forbidden defense/bare-metal symbols or internal files leak into the public
+# artifacts.
+#
+# Usage:
+#   ./scripts/audit_pypi_release
+#
+# Exit codes:
+#   0  audit passed
+#   1  audit failed (forbidden content detected or build error)
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-${REPO_ROOT}/target}"
+AUDIT_DIR="${CARGO_TARGET_DIR}/pypi-audit"
+WHEEL_DIR="${CARGO_TARGET_DIR}/wheels"
+SDIST_EXTRACT_DIR="${AUDIT_DIR}/sdist-extract"
+
+# Forbidden patterns that must NOT appear in compiled artifacts, source
+# distributions, or wheel metadata.
+FORBIDDEN_PATTERNS="accse|swarm|hungarian|m7|mmio|radar|jamming|dtmdp|itar|military|electronic warfare|counter.swarm|no_std silicon|register offset|flight|actuator|motor|drone|robot|kinetic|physical|px4|ardupilot|bare-metal|sbir|weapon|missile|defense contractor"
+
+# Forbidden file/directory patterns that must NOT appear in source distributions.
+FORBIDDEN_PATH_PATTERNS="\\.cargo/|\\.ld$|kani_proofs|kani_multivar|benchmark_harness|pendulum_sim|relulayer-fleet|relulayer-safety|relulayer-proofs|relulayer-ffi|veristate|daf-drone|prompt2ppt|10-kernel/|crates/relulayer-(fleet|safety|proofs|ffi)/"
+
+# Ensure a clean audit workspace.
+rm -rf "${AUDIT_DIR}"
+mkdir -p "${AUDIT_DIR}" "${WHEEL_DIR}"
+
+# Ensure maturin is available.
+if ! command -v maturin >/dev/null 2>&1; then
+    echo "ERROR: maturin not found in PATH" >&2
+    exit 1
+fi
+
+echo "==> Verifying build environment is patched against eMudhra/emSign CA incident ..."
+# https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576
+MIN_PIP_VERSION="26.2.2"
+MIN_CERTIFI_VERSION="2026.10.19"
+ENV_TLS_OK=1
+
+PYTHON_BIN="${PYTHON:-python3}"
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+    echo "WARNING: Python not found; skipping TLS environment check" >&2
+else
+    PIP_VERSION=$(${PYTHON_BIN} -m pip --version 2>/dev/null | awk '{print $2}') || PIP_VERSION=""
+    CERTIFI_VERSION=$(${PYTHON_BIN} -c "import certifi; print(certifi.__version__)" 2>/dev/null) || CERTIFI_VERSION=""
+
+    echo "    pip:     ${PIP_VERSION:-not installed}"
+    echo "    certifi: ${CERTIFI_VERSION:-not installed}"
+
+    if [ -n "${PIP_VERSION}" ]; then
+        if printf '%s\n%s\n' "${MIN_PIP_VERSION}" "${PIP_VERSION}" | sort -V -C; then
+            : # pip version is >= minimum
+        else
+            echo "ERROR: pip ${PIP_VERSION} < ${MIN_PIP_VERSION}; update pip securely before releasing" >&2
+            ENV_TLS_OK=0
+        fi
+    else
+        echo "ERROR: pip not available" >&2
+        ENV_TLS_OK=0
+    fi
+
+    if [ -n "${CERTIFI_VERSION}" ]; then
+        if printf '%s\n%s\n' "${MIN_CERTIFI_VERSION}" "${CERTIFI_VERSION}" | sort -V -C; then
+            : # certifi version is >= minimum
+        else
+            echo "ERROR: certifi ${CERTIFI_VERSION} < ${MIN_CERTIFI_VERSION}; update certifi before releasing" >&2
+            ENV_TLS_OK=0
+        fi
+    else
+        echo "WARNING: certifi not installed; relying on system trust store only" >&2
+    fi
+fi
+
+if [ "${ENV_TLS_OK}" -ne 1 ]; then
+    echo "AUDIT FAILED: build environment TLS trust store is not patched." >&2
+    exit 1
+fi
+
+cd "${REPO_ROOT}"
+
+echo "==> Building source distribution ..."
+maturin sdist --out "${WHEEL_DIR}" "$@"
+
+echo ""
+echo "==> Building wheel from the source distribution ..."
+SDIST=$(find "${WHEEL_DIR}" -maxdepth 1 -name 'relulayer-*.tar.gz' | head -n 1)
+if [ -z "${SDIST}" ]; then
+    echo "ERROR: source distribution (.tar.gz) not found in ${WHEEL_DIR}" >&2
+    exit 1
+fi
+rm -rf "${SDIST_EXTRACT_DIR}"
+mkdir -p "${SDIST_EXTRACT_DIR}"
+tar -xzf "${SDIST}" -C "${SDIST_EXTRACT_DIR}"
+SDIST_ROOT=$(find "${SDIST_EXTRACT_DIR}" -maxdepth 1 -type d | tail -n 1)
+(
+    cd "${SDIST_ROOT}"
+    maturin build --release --out "${WHEEL_DIR}" "$@"
+)
+
+echo ""
+echo "==> Built artifacts:"
+ls -la "${WHEEL_DIR}"
+
+echo ""
+echo "==> Inspecting source distribution contents ..."
+tar -tzvf "${SDIST}" | tee "${AUDIT_DIR}/sdist.list"
+
+echo ""
+echo "==> Inspecting wheel contents ..."
+WHEEL=$(find "${WHEEL_DIR}" -maxdepth 1 -name 'relulayer-*.whl' | head -n 1)
+if [ -z "${WHEEL}" ]; then
+    echo "ERROR: wheel (.whl) not found in ${WHEEL_DIR}" >&2
+    exit 1
+fi
+unzip -l "${WHEEL}" | tee "${AUDIT_DIR}/wheel.list"
+
+echo ""
+echo "==> Extracting wheel for compiled-library audit ..."
+unzip -o "${WHEEL}" -d "${AUDIT_DIR}/wheel-extract"
+
+echo ""
+echo "==> Running forbidden-symbol audit on compiled dynamic libraries ..."
+FOUND_SYMBOLS=0
+while IFS= read -r -d '' lib; do
+    echo "    Auditing: ${lib}"
+    if strings "${lib}" | grep -Ei "${FORBIDDEN_PATTERNS}" | tee -a "${AUDIT_DIR}/forbidden-symbols.txt"; then
+        FOUND_SYMBOLS=1
+    fi
+done < <(find "${AUDIT_DIR}/wheel-extract" -type f \( -name '*.so' -o -name '*.dylib' -o -name '*.dll' \) -print0)
+
+echo ""
+echo "==> Running forbidden-symbol audit on wheel metadata / SBOM files ..."
+while IFS= read -r -d '' meta; do
+    echo "    Auditing: ${meta}"
+    if grep -Ei "${FORBIDDEN_PATTERNS}" "${meta}" | tee -a "${AUDIT_DIR}/forbidden-symbols.txt"; then
+        FOUND_SYMBOLS=1
+    fi
+done < <(find "${AUDIT_DIR}/wheel-extract" -type f \( -name 'METADATA' -o -name '*.json' -o -name '*.txt' \) -print0)
+
+echo ""
+echo "==> Running forbidden-path audit on source distribution ..."
+FOUND_PATHS=0
+if grep -Ei "${FORBIDDEN_PATH_PATTERNS}" "${AUDIT_DIR}/sdist.list" | tee "${AUDIT_DIR}/forbidden-paths.txt"; then
+    FOUND_PATHS=1
+fi
+
+echo ""
+echo "==> Running forbidden-path audit on wheel ..."
+if grep -Ei "${FORBIDDEN_PATH_PATTERNS}" "${AUDIT_DIR}/wheel.list" | tee -a "${AUDIT_DIR}/forbidden-paths.txt"; then
+    FOUND_PATHS=1
+fi
+
+echo ""
+if [ "${FOUND_SYMBOLS}" -ne 0 ] || [ "${FOUND_PATHS}" -ne 0 ]; then
+    echo "AUDIT FAILED: forbidden content detected." >&2
+    echo "  - Symbol hits: ${AUDIT_DIR}/forbidden-symbols.txt" >&2
+    echo "  - Path hits:   ${AUDIT_DIR}/forbidden-paths.txt" >&2
+    exit 1
+fi
+
+echo "AUDIT PASSED: no forbidden defense or bare-metal content detected."
+exit 0

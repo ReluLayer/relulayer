@@ -3,7 +3,6 @@ members = [
     "10-kernel/relulayer-core",
     "10-kernel/relulayer-security",
     "crates/relulayer-ffi",
-    "crates/relulayer-py",
     "crates/relulayer-proofs",
     "crates/relulayer-safety",
     "crates/relulayer-fleet",
@@ -11,10 +10,10 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["ReluLayer Red Team Hardening"]
-license = "Proprietary"
+license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 relulayer-core = { path = "10-kernel/relulayer-core" }

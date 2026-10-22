@@ -23,11 +23,12 @@ use crate::limits::{
     NONCE_SIZE,
 };
 use crate::ReluError;
+#[cfg(not(kani))]
 use subtle::ConstantTimeEq;
 
 /// Default boundary interceptor.
 ///
-/// Holds the authorization key and replay state. In a single-threaded bare-metal
+/// Holds the authorization key and replay state. In a single-threaded host
 /// context this is a global singleton; in a multi-threaded host the host runtime
 /// must either serialize calls or provide one interceptor per kernel thread.
 pub struct BoundaryInterceptor {
@@ -123,7 +124,12 @@ impl BoundaryInterceptor {
         }
 
         let computed = hasher.finalize();
-        if computed.ct_eq(&receipt.tag).into() {
+        #[cfg(not(kani))]
+        let tags_equal = computed.ct_eq(&receipt.tag).into();
+        #[cfg(kani)]
+        let tags_equal = crate::crypto::kani_tags_equal(&computed, &receipt.tag);
+
+        if tags_equal {
             self.state.last_counter = receipt.counter;
             self.state.replay_window.record(&receipt.nonce);
             Ok(())

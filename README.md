@@ -2,12 +2,15 @@
 
 [![CI / Build & Test](https://github.com/relulayer/relulayer/actions/workflows/wheels.yml/badge.svg)](https://github.com/relulayer/relulayer/actions)
 [![PyPI Version](https://img.shields.io/pypi/v/relulayer.svg?color=blue)](https://pypi.org/project/relulayer/)
-[![Crates.io](https://img.shields.io/crates/v/relulayer.svg?color=orange)](https://crates.io/crates/relulayer)
 [![Rust MSRV](https://img.shields.io/badge/rustc-1.75%2B-brightgreen.svg)](https://www.rust-lang.org)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-yellow.svg)](LICENSE-APACHE)
 [![Fast-Path Latency](https://img.shields.io/badge/Fast--Path%20Latency-0.199%20%CE%BCs-blueviolet)](https://github.com/relulayer/relulayer)
 
-> **Deterministic Edge Governor & Real-Time Execution Gatekeeper for Physical Super Intelligence (SI), Autonomous Robotics, and High-Assurance Actuators.**
+> **Deterministic Edge Governor & Real-Time Execution Gatekeeper for Software Agent Workflows and Simulation Testbeds.**
+
+> ⚠️ **IMPORTANT NOTICE & SAFETY-CRITICAL USAGE RESTRICTION:**
+>
+> `relulayer` is distributed solely as an experimental evaluation and development framework for software-level agent governance, simulation, and architectural prototyping. This package is **NOT CERTIFIED FOR SAFETY-CRITICAL, HIGH-CONSEQUENCE, OR LIFE-CRITICAL SYSTEMS**. Direct integration with safety-critical hardware or external control systems requires ReluLayer™ Certified Kernels and a separate commercial agreement. The authors and Atelier Logic Group LLC disclaim all liability for property damage, personal injury, or regulatory violations resulting from unauthorized integration.
 
 ## Quickstart
 
@@ -25,25 +28,25 @@ Verify in Python:
 import relulayer
 from relulayer import ReluBoundary
 
-# Instantiate deterministic edge governor with stack-allocated bounds
+# Instantiate a deterministic agent governor for simulation / testbed use
 boundary = ReluBoundary(
-    max_velocity_rad_s=4.18,
+    max_rate=4.18,
     monotonic_window_size=64,
     hmac_key=b"0123456789abcdef0123456789abcdef"
 )
 
-# Fast-path verification (0.199 µs)
+# Fast-path software authorization check (0.199 µs)
 receipt = boundary.authorize_action(
-    target_axis=0,
-    requested_position=1.57,
-    commanded_velocity=2.0
+    channel=0,
+    setpoint=1.57,
+    delta=2.0
 )
 assert receipt.is_authorized
 ```
 
-### Source Build Fallback (Embedded & Custom Targets)
+### Source Build Fallback
 
-For bare-metal microcontrollers (ARM Cortex-R52/M7, RISC-V), QNX, or VxWorks:
+For local development and custom host targets:
 
 1. **Install Prerequisites**:
 
@@ -52,13 +55,7 @@ For bare-metal microcontrollers (ARM Cortex-R52/M7, RISC-V), QNX, or VxWorks:
    pip install maturin
    ```
 
-2. **Build `#![no_std]` Separation Kernel**:
-
-   ```bash
-   cargo build --release --no-default-features
-   ```
-
-3. **Install Local Development Bindings**:
+2. **Build Local Development Bindings**:
 
    ```bash
    maturin develop --release
@@ -74,26 +71,27 @@ Short tool calls take the sub-512-byte fast path. Larger payloads stream through
 | [Guardrails AI](https://github.com/guardrails-ai/guardrails) | 18.2 ms |
 | [NVIDIA NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails) | 24.5 ms |
 
-Host builds enable the `std` feature so tests and PyO3 can link the standard library. Production firmware builds disable `std` and compile as `#![no_std]` with `0` bytes of heap in the kernel.
+Host builds enable the `std` feature so tests and PyO3 can link the standard library. Validated safety-critical deployments require ReluLayer™ Certified Kernels compiled as `#![no_std]` with `0` bytes of heap; that hardened target is not included in this open-source distribution.
 
 ## When to Use ReluLayer (Applicability Matrix)
 
-ReluLayer is not a conversational text filter. It is an execution-level gatekeeper that proves an action was authorized and prevents it from being tampered with or replayed in the moment it crosses from planner to host.
+ReluLayer is not a conversational text filter. It is a software-level execution gatekeeper that proves an action was authorized and prevents it from being tampered with or replayed in the moment it crosses from planner to execution environment in a simulation or testbed.
 
 - **Semantic Content Filters (Guardrails AI, NVIDIA NeMo):** Run secondary LLM calls or regex parsing to evaluate conversational text ($18\text{--}25\,\text{ms}$, dynamic heap memory). Use them for brand tone, PII redaction, and chatbot toxicity.
-- **Execution-Level Gatekeepers (ReluLayer):** Intercept raw execution payloads (APIs, SQL, motor actuators) directly before execution ($0.199\,\mu\text{s}$, zero dynamic heap, anti-replay monotonicity). Use ReluLayer for tool calling, robotics control loops, and mission-critical actions.
+- **Execution-Level Gatekeepers (ReluLayer):** Intercept software execution payloads (APIs, SQL, simulated control commands) directly before execution in a sandboxed environment ($0.199\,\mu\text{s}$, zero dynamic heap, anti-replay monotonicity). Use ReluLayer for tool calling, simulated autonomy control loops, and mission-critical software actions.
 
 | Use Case Scenario | Use ReluLayer? | Why / Why Not |
 | :--- | :--- | :--- |
-| **Agent Tool Calling (Databases, APIs, Shells)** | **YES** | Proves the tool execution request was authorized by an upstream planner and hasn't suffered mid-flight TOCTOU tampering. |
-| **Robotics & Drones (Actuator Motor Demands)** | **YES** | Real-time control loops run at $400\text{--}1000\,\text{Hz}$ ($1{,}000\text{--}2{,}500\,\mu\text{s}$ frame budget). A $0.199\,\mu\text{s}$ interceptor fits inside the loop; a $20\,\text{ms}$ LLM filter would crash the drone. |
-| **High-Frequency Trading & FinTech Actions** | **YES** | Sub-microsecond validation of trade parameters and monotonic sequence ordering to prevent duplicate or replayed transactions. |
+| **Agent Tool Calling (Databases, APIs, Shells)** | **YES** | Proves the tool execution request was authorized by an upstream planner and hasn't suffered in-transit TOCTOU tampering. Always run in a sandbox or testbed first. |
+| **Autonomy & Control-Loop Simulation** | **YES** | Validate control-loop commands and monotonic sequencing in simulation ($400\text{--}1000\,\text{Hz}$ notional frame budget). A $0.199\,\mu\text{s}$ check fits inside the software loop. |
+| **High-Frequency Trading & FinTech Simulation** | **YES** | Sub-microsecond validation of trade parameters and monotonic sequence ordering in backtesting and simulation environments. |
+| **Safety-Critical Hardware or External Control Systems** | **NO** | This open-source package is not certified for high-consequence or life-critical systems. Contact ReluLayer™ for certified kernel options. |
 | **Chatbot Brand Voice & Tone Moderation** | **NO** | ReluLayer does not analyze conversational sentiment or linguistic style. Use Guardrails AI or NeMo here. |
 | **Prompt Injection / Text Jailbreak Detection** | **NO** | ReluLayer protects the *action execution interface*, not the prompt parsing phase. Pair an input guardrail on text with ReluLayer on execution. |
 
 ## Examples & Cookbook
 
-For copy-pasteable, runnable recipes covering TOCTOU-safe database tool calling, distributed replay prevention, and high-frequency robotics motor governance, see [`COOKBOOK.md`](COOKBOOK.md).
+For copy-pasteable, runnable recipes covering TOCTOU-safe database tool calling, distributed replay prevention, and high-frequency simulation governance, see [`COOKBOOK.md`](COOKBOOK.md).
 
 ## Formal verification
 
@@ -115,74 +113,92 @@ LD_LIBRARY_PATH="$(python3 -c 'import sysconfig; print(sysconfig.get_config_var(
 
 ## Enterprise & High-Assurance Evaluation
 
-ReluLayer™ is engineered specifically for physical autonomy domains where probabilistic software failure risks kinetic destruction, actuator runaway, or loss of life. While probabilistic foundation models and Vision-Language-Action (VLA) networks handle high-level planning, ReluLayer™ operates as the deterministic, hardware-adjacent **Edge Governor** and **Execution Gatekeeper**.
+ReluLayer™ is designed for teams building deterministic runtime assurance into
+software agent and autonomy stacks. The open-source distribution provides a
+simulation-first execution gatekeeper; validated safety-critical deployments are
+supported through ReluLayer™ Certified Kernels and separate enterprise
+licensing.
 
-### Regulatory Safety Standards Alignment
+### Regulatory Safety Standards Alignment — Simulation & Architectural Prototyping
 
-| Standard | Target Domain | ReluLayer™ Deterministic Enforcement Profile | Target Assurance Level |
+The open-source `relulayer` package is **not certified** to any of the standards
+below. Its architecture is informed by the runtime-assurance principles reflected
+in those standards and is intended for simulation, testing, and architectural
+prototyping only. CPython execution cannot provide certified real-time
+determinism.
+
+| Standard | Target Domain | ReluLayer™ Architectural Alignment for Simulation | Notional Target for Certified Editions |
 | :--- | :--- | :--- | :--- |
-| **DO-178C / DO-330** | Civil & Military Avionics | Zero dynamic allocations (`#![no_std]`), static stack-depth guarantees ($< 4\,\text{KB}$), deterministic execution bounds ($0.199\,\mu\text{s}$). | **Design Assurance Level (DAL) A/B** |
-| **IEC 61508** | Industrial Autonomous Robotics | Monotonic counter tracking preventing Time-of-Check to Time-of-Use (TOCTOU) exploits, bounded state-machine validation. | **SIL 3 / SIL 4** |
-| **Common Criteria** | Secure Defense Infrastructure | Cryptographically sealed HMAC-SHA256 action receipts, microkernel MILS separation architecture. | **EAL 6+ Augmentation** |
-| **ISO 26262** | Autonomous Vehicles & ADAS | Real-time torque, steering kinematic boundaries, and bus-level command isolation outside userland OS. | **ASIL D** |
+| **DO-178C / DO-330** | Avionics | Zero dynamic allocations (`#![no_std]`), static stack-depth goals ($< 4\,\text{KB}$), deterministic execution bounds ($0.199\,\mu\text{s}$). | Design Assurance Level (DAL) A/B — *Certified Safety Edition only* |
+| **IEC 61508** | Industrial Automation | Monotonic counter tracking preventing Time-of-Check to Time-of-Use (TOCTOU) exploits, bounded state-machine validation. | SIL 3 / SIL 4 — *Certified Safety Edition only* |
+| **Common Criteria** | Secure Infrastructure | Cryptographically sealed HMAC-SHA256 action receipts, microkernel MILS separation architecture. | EAL 6+ Augmentation — *Certified Safety Edition only* |
+| **ISO 26262** | Autonomous Vehicles & ADAS | Real-time torque and steering kinematic boundary concepts, bus-level command isolation outside userland OS. | ASIL D — *Certified Safety Edition only* |
 
 ---
 
 ### Inbound Engagement Protocol: Enterprise Design Partners
 
-We partner with autonomous vehicle OEMs, defense contractors, robotics integrators, and critical infrastructure operators requiring verified, tamper-evident execution control.
-
-Design partners receive dedicated engineering co-development for mission-critical deployments:
+We partner with software agent developers, systems integrators, and
+critical infrastructure operators who need verified, tamper-evident execution
+control. Design partners receive engineering co-development for simulation
+hardening and, separately, certified production deployments:
 
 ```
 [Inbound Intake]
        │
        ▼
-[Architecture & Threat Model Review] ────► 1-Week Analysis of Actuator & Compute Bus
+[Architecture & Threat Model Review] ────► 1-Week Analysis of Planner-to-Execution Data Flow
        │
        ▼
-[Custom Hardware Integration Harness] ───► Board Support Package (BSP) for QNX, VxWorks, or FPGA
+[Simulation Integration Harness] ────────► Software-in-the-Loop (SIL) Testbed & Benchmarks
        │
        ▼
-[Dedicated Hardware-in-the-Loop Testbed] ► Latency, Jitter, & Fault-Injection Verification
+[Validated Hardware-in-the-Loop Testbed] ► Latency, Jitter, & Fault-Injection Verification
        │
        ▼
-[Co-Developed Production Deployment] ───► ReluLayer™ Safety Edition License & Qualification Data
+[Certified Production Deployment] ─────────► ReluLayer™ Safety Edition License & Qualification Data
 ```
 
-1. **Architecture & Threat Model Review**: Complete audit of your motion planner-to-actuator control loop. We identify TOCTOU race conditions, non-deterministic latency spikes, and unauthorized actuator command injection surfaces.
-2. **Custom Hardware Integration Harness**: Tailored integration for mission-critical target environments, including bare-metal microcontrollers (ARM Cortex-R52/M7, RISC-V RV64GC), real-time operating systems (QNX Neutrino 7.1+, VxWorks 653), and low-latency PCIe/CAN-FD interfaces.
-3. **Dedicated Hardware-in-the-Loop (HIL) Testbed**: Rigorous edge injection testing under saturation workloads. We prove absolute boundary enforcement down to $0.199\,\mu\text{s}$ authorization latency under hardware failure conditions.
+1. **Architecture & Threat Model Review**: Audit the planner-to-execution data
+   flow in your software stack. We identify TOCTOU race conditions,
+   non-deterministic latency spikes, and unauthorized command injection surfaces.
+2. **Simulation Integration Harness**: Tailored integration for your simulation
+   environment, including software-in-the-loop (SIL) benchmarks and replay
+   monotonicity validation.
+3. **Validated Hardware-in-the-Loop (HIL) Testbed**: For certified editions,
+   rigorous edge-injection testing under saturation workloads on validated
+   target hardware.
 
 To initiate an architectural evaluation under Mutual NDA, contact:
-**Defense & Aerospace Solutions Group**: `ishmael.amin@outlook.com`
-*Direct inquiries referencing Air Force SBIR D2P2 Topic `DAF26BX06-DV026` receive prioritized technical evaluation within 24 hours.*
+**Atelier Logic Group LLC dba ReluLayer™** — `ishmael.amin@outlook.com`
 
 ---
 
 ### Safety & Compliance Roadmap (2026–2027)
 
-ReluLayer™ follows an open-core, high-assurance roadmap designed to support civil certification and military airworthiness qualifications:
+ReluLayer™ follows an open-core roadmap. The open-source package provides
+simulation and architectural-prototyping artifacts; certified qualification data
+packs are delivered through the commercial Safety Edition.
 
 ```
        Q4 2026                        Q1 2027                        Q2 2027                        Q3 2027
 ┌──────────────────────┐      ┌──────────────────────┐      ┌──────────────────────┐      ┌──────────────────────┐
-│  Phase II SBIR D2P2  │      │  Kani & Creusot SV   │      │  IEC 61508 Pre-Cert  │      │ DO-178C DAL A Pack   │
-│  Flight Verification │ ────►│  Mathematical Proofs │ ────►│  Functional Safety   │ ────►│ Avionics Tool Qual   │
-│  Actuator Isolation  │      │  Zero-Panic Baseline │      │  SIL 3/4 Artifacts   │      │ PSAC / TOR Bundles   │
+│  Simulation Hardening  │      │  Kani & Creusot SV   │      │  IEC 61508 Pre-Cert  │      │ DO-178C DAL A Pack   │
+│  & Testbed Alignment   │ ────►│  Mathematical Proofs │ ────►│  Functional Safety   │ ────►│ Avionics Tool Qual   │
+│                        │      │  Zero-Panic Baseline │      │  SIL 3/4 Artifacts   │      │ PSAC / TOR Bundles   │
 └──────────────────────┘      └──────────────────────┘      └──────────────────────┘      └──────────────────────┘
 ```
 
-- **Q4 2026 (Air Force SBIR D2P2 Alignment — Topic `DAF26BX06-DV026`)**:
-  - Demonstration of flight-critical actuator command isolation under contested electromagnetic interference and adversarial compute interception.
-  - Delivery of zero-heap monotonic sequencing kernel running bare-metal on military-grade avionics compute blocks.
+- **Q4 2026 (Simulation Hardening & Testbed Alignment)**:
+  - Hardening of the software-level agent governor for deterministic behavior in simulation and SIL environments.
+  - Delivery of open-core monotonic sequencing kernel suitable for research and prototyping hosts.
 - **Q1 2027 (Formal Static Verification Proofs)**:
   - Integration of model checking and formal verification toolchains (Kani Rust Verifier, Creusot).
   - Mathematical verification of zero-panic invariant states, absence of arithmetic overflow, and bounded stack consumption ($< 4\,\text{KB}$).
-- **Q2 2027 (IEC 61508 SIL 3/4 Functional Safety Package)**:
+- **Q2 2027 (IEC 61508 SIL 3/4 Functional Safety Package)** — *Safety Edition*:
   - Third-party assessment of failure modes, effects, and diagnostic analysis (FMEDA).
-  - Production of deterministic hazard mitigation matrices for industrial robotics workcells.
-- **Q3 2027 (DO-178C Tool Qualification Data Packs)**:
+  - Production of deterministic hazard mitigation matrices for industrial automation workcells.
+- **Q3 2027 (DO-178C Tool Qualification Data Packs)** — *Safety Edition*:
   - Release of ReluLayer™ Safety Edition documentation: Plan for Software Aspects of Certification (PSAC), Software Tool Qualification Plan (STQP), and Tool Operational Requirements (TOR).
 
 ## License
@@ -193,3 +209,15 @@ Licensed under either of
 - Massachusetts Institute of Technology (MIT) license ([LICENSE-MIT](LICENSE-MIT))
 
 at your option.
+
+### Patent Rights Notice
+
+Copyright (c) 2026 Atelier Logic Group LLC dba ReluLayer™. All Rights Reserved.
+
+This open-source release grants a license solely to the software code and Python
+interfaces expressly contained in this repository distribution. Nothing in this
+license shall be construed as granting, either expressly, by implication, or by
+estoppel, any patent license or right to practice, make, have made, use, sell,
+or offer for sale any inventions, architectures, methods, or apparatus disclosed
+or claimed in USPTO Provisional Patent Application Serial Nos. 64/127,611 and
+64/124,094. See [PATENTS.md](PATENTS.md) for the complete reservation.

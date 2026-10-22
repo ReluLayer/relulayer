@@ -1,0 +1,34 @@
+[package]
+name = "relulayer-security"
+version = "0.2.1"
+edition = "2021"
+authors = ["ReluLayer Red Team Hardening"]
+description = "Zero-heap boundary interceptor for AI agent action authorization."
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+
+[features]
+default = ["std"]
+# Enable standard-library support. Disable for `#![no_std]` production builds.
+std = []
+# Force software SHA-256 implementation (portable, no CPU crypto extensions).
+sha256-software = ["sha2/force-soft"]
+# Enable assembly-optimized compression on x86_64 / aarch64.
+sha256-hw = ["sha2/asm"]
+# Runtime CPU feature detection for host/PyPI builds.
+sha256-runtime-detect = ["cpufeatures"]
+
+[dependencies]
+sha2 = { version = "0.10", default-features = false }
+hmac = { version = "0.12", default-features = false }
+subtle = { version = "2.6", default-features = false }
+cpufeatures = { version = "0.2", optional = true }
+
+[dev-dependencies]
+hex-literal = "0.4"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

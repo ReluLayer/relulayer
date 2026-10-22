@@ -1,7 +1,10 @@
 [package]
 name = "relulayer-core"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
+description = "Core deterministic math kernels for the ReluLayer open-source simulation package."
+license = "MIT OR Apache-2.0"
+publish = false
 
 [lib]
 crate-type = ["rlib", "staticlib", "cdylib"]
@@ -10,6 +13,9 @@ crate-type = ["rlib", "staticlib", "cdylib"]
 default = ["std"]
 # Enable standard-library support. Disable for `#![no_std]` production builds.
 std = []
+# Internal extras: pendulum_sim and benchmark_harness modules used only in the
+# local workspace; not included in the public PyPI source distribution.
+internal-extras = []
 # Embedded target support (mutually exclusive with `std`).
 embedded = ["cortex-m", "cortex-m-rt"]
 

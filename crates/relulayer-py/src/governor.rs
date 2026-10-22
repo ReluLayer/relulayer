@@ -2,7 +2,7 @@
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use relulayer_core::{solve_active_set_scalar, ActuatorLimits, LinearConstraints};
+use relulayer_core::{solve_active_set_scalar, LinearConstraints, ValueBounds};
 
 /// Python wrapper around the ReluLayer scalar active-set projection kernel.
 #[pyclass]
@@ -14,7 +14,7 @@ pub struct Governor {
 
 #[pymethods]
 impl Governor {
-    /// Construct a new governor with the given actuator limits.
+    /// Construct a new governor with the given value bounds.
     #[new]
     fn new(min_bound: f32, max_bound: f32) -> PyResult<Self> {
         if !(min_bound < max_bound) {
@@ -35,9 +35,9 @@ impl Governor {
         })
     }
 
-    /// Project a single scalar actuator command into the safe envelope.
+    /// Project a single scalar value into the safe envelope.
     fn project(&self, u_desired: f32) -> f32 {
-        let limits = ActuatorLimits {
+        let limits = ValueBounds {
             u_min: self.min_bound,
             u_max: self.max_bound,
         };
@@ -45,7 +45,7 @@ impl Governor {
         result.u_safe.clamp(self.min_bound, self.max_bound)
     }
 
-    /// Project a vector of actuator commands in a single call.
+    /// Project a vector of scalar values in a single call.
     fn project_batch(&self, u_vec: Vec<f32>) -> Vec<f32> {
         u_vec.into_iter().map(|u| self.project(u)).collect()
     }

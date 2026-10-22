@@ -1,10 +1,22 @@
-//! Zero-overhead PyO3 bindings for the ReluLayer™ deterministic edge governor.
+//! Zero-overhead PyO3 bindings for the ReluLayer™ deterministic agent governor.
 //!
 //! Exposes `ReluBoundary`, `ReluReceipt`, `ReluViolation`, and
 //! `MonotonicCounter` under the public `relulayer` namespace. The hot-path
 //! `authorize_action()` method performs all safety checks over stack-resident
 //! fixed-size buffers and delegates HMAC computation to the verified
 //! `#![no_std]` `relulayer-security` micro-kernel.
+//!
+//! # IMPORTANT NOTICE — SOFTWARE EVALUATION ONLY
+//!
+//! This crate is distributed solely as an experimental evaluation and
+//! development framework for software-level agent governance, simulation, and
+//! architectural prototyping. It is **NOT CERTIFIED FOR SAFETY-CRITICAL,
+//! HIGH-CONSEQUENCE, OR LIFE-CRITICAL SYSTEMS**. Direct integration with
+//! safety-critical hardware or external control systems requires ReluLayer™
+//! Certified Kernels and a separate commercial agreement. The authors and
+//! Atelier Logic Group LLC disclaim all liability for property damage,
+//! personal injury, or regulatory violations resulting from unauthorized
+//! integration.
 
 use pyo3::exceptions::{PyException, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
@@ -23,7 +35,7 @@ mod governor;
 pub use governor::Governor;
 
 /// Current Python package version.
-const PYTHON_VERSION: &str = "0.2.0";
+const PYTHON_VERSION: &str = "0.2.1";
 
 /// Nanosecond timestamp since the Unix epoch.
 fn now_nanos() -> u64 {
@@ -158,11 +170,11 @@ struct BoundaryState {
     window_count: u64,
 }
 
-/// Deterministic edge governor that authorizes physical actions.
+/// Deterministic agent governor that authorizes software agent actions.
 #[pyclass]
 pub struct ReluBoundary {
     rate_limit: u64,
-    max_velocity: f64,
+    max_rate: f64,
     #[allow(dead_code)]
     monotonic_window_size: usize,
     counter: AtomicU64,
@@ -172,10 +184,10 @@ pub struct ReluBoundary {
 #[pymethods]
 impl ReluBoundary {
     #[new]
-    #[pyo3(signature = (rate_limit = 1000, max_velocity_rad_s = 4.18, monotonic_window_size = 64, hmac_key = None))]
+    #[pyo3(signature = (rate_limit = 1000, max_rate = 4.18, monotonic_window_size = 64, hmac_key = None))]
     fn new(
         rate_limit: u64,
-        max_velocity_rad_s: f64,
+        max_rate: f64,
         monotonic_window_size: usize,
         hmac_key: Option<&[u8]>,
     ) -> PyResult<Self> {
@@ -187,7 +199,7 @@ impl ReluBoundary {
 
         Ok(Self {
             rate_limit,
-            max_velocity: max_velocity_rad_s,
+            max_rate,
             monotonic_window_size,
             counter: AtomicU64::new(0),
             state: Mutex::new(BoundaryState {
@@ -198,21 +210,21 @@ impl ReluBoundary {
         })
     }
 
-    /// Authorize a single actuator command and return a signed receipt.
+    /// Authorize a single software action and return a signed receipt.
     fn authorize_action(
         &self,
-        target_axis: i32,
-        requested_position: f64,
-        commanded_velocity: f64,
+        channel: i32,
+        setpoint: f64,
+        delta: f64,
     ) -> PyResult<ReluReceipt> {
-        // Velocity safety envelope.
-        if commanded_velocity.abs() > self.max_velocity {
+        // Rate-of-change safety envelope.
+        if delta.abs() > self.max_rate {
             return Err(PyErr::new::<ReluViolation, _>((
-                target_axis,
-                "velocity_exceeded",
+                channel,
+                "rate_exceeded",
                 format!(
-                    "commanded_velocity {} rad/s exceeds max_velocity_rad_s {} rad/s",
-                    commanded_velocity, self.max_velocity
+                    "delta {} exceeds max_rate {}",
+                    delta, self.max_rate
                 ),
             )));
         }
@@ -230,7 +242,7 @@ impl ReluBoundary {
             state.window_count += 1;
             if state.window_count > self.rate_limit {
                 return Err(PyErr::new::<ReluViolation, _>((
-                    target_axis,
+                    channel,
                     "rate_limited",
                     "action rate limit exceeded",
                 )));
@@ -243,25 +255,25 @@ impl ReluBoundary {
         getrandom::getrandom(&mut nonce)
             .map_err(|e| PyRuntimeError::new_err(format!("failed to generate nonce: {e}")))?;
 
-        let action_id = format!("axis_{}", target_axis);
+        let action_id = format!("channel_{}", channel);
         if action_id.len() > MAX_ACTION_ID_SIZE {
-            return Err(PyValueError::new_err("target_axis produces oversized action id").into());
+            return Err(PyValueError::new_err("channel produces oversized action id").into());
         }
 
         let mut payload = [0u8; 16];
-        payload[..8].copy_from_slice(&requested_position.to_le_bytes());
-        payload[8..].copy_from_slice(&commanded_velocity.to_le_bytes());
+        payload[..8].copy_from_slice(&setpoint.to_le_bytes());
+        payload[8..].copy_from_slice(&delta.to_le_bytes());
 
         let receipt = state
             .interceptor
             .issue_receipt(&nonce, now, sequence_id, action_id.as_bytes(), &payload)
-            .map_err(|e| relu_error_to_py_err(target_axis, e))?;
+            .map_err(|e| relu_error_to_py_err(channel, e))?;
 
         // Persist replay state by validating the just-issued receipt.
         state
             .interceptor
             .intercept_and_authorize(action_id.as_bytes(), &payload, &receipt)
-            .map_err(|e| relu_error_to_py_err(target_axis, e))?;
+            .map_err(|e| relu_error_to_py_err(channel, e))?;
 
         Ok(ReluReceipt {
             authorized: true,
@@ -271,6 +283,51 @@ impl ReluBoundary {
             action_id,
             payload,
         })
+    }
+
+    /// Issue a replay-resistant authorization receipt for a software action.
+    ///
+    /// Returns the serialized receipt bytes. The caller is responsible for
+    /// transporting the receipt and the payload together to the execution host.
+    fn issue_receipt<'py>(
+        &self,
+        py: Python<'py>,
+        nonce: [u8; NONCE_SIZE],
+        timestamp: u64,
+        counter: u64,
+        action_id: &[u8],
+        payload: &[u8],
+    ) -> PyResult<Bound<'py, PyBytes>> {
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| PyRuntimeError::new_err("ReluBoundary state is poisoned"))?;
+        let receipt = state
+            .interceptor
+            .issue_receipt(&nonce, timestamp, counter, action_id, payload)
+            .map_err(|e| relu_error_to_py_err(0, e))?;
+        Ok(PyBytes::new(py, &receipt.to_bytes()))
+    }
+
+    /// Verify a receipt against a caller-supplied payload and update replay state.
+    ///
+    /// Raises `ReluViolation` if the receipt is invalid, tampered, or a replay.
+    fn intercept_and_authorize(
+        &self,
+        action_id: &[u8],
+        payload: &[u8],
+        receipt: &[u8],
+    ) -> PyResult<()> {
+        let receipt = AuthorizationReceipt::from_bytes(receipt)
+            .map_err(|e| relu_error_to_py_err(0, e))?;
+        let mut state = self
+            .state
+            .lock()
+            .map_err(|_| PyRuntimeError::new_err("ReluBoundary state is poisoned"))?;
+        state
+            .interceptor
+            .intercept_and_authorize(action_id, payload, &receipt)
+            .map_err(|e| relu_error_to_py_err(0, e))
     }
 }
 

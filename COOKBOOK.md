@@ -1,10 +1,10 @@
-# ReluLayer Production Cookbook
+# ReluLayer Cookbook
 
-This cookbook provides drop-in, runnable recipes demonstrating how to integrate ReluLayer into modern autonomous AI, multi-agent, and physical systems.
+This cookbook provides drop-in, runnable recipes demonstrating how to integrate ReluLayer into software agent workflows, simulation testbeds, and multi-agent systems.
 
 ---
 
-## Recipe 1: Securing Autonomous Agent Database & Tool Execution (TOCTOU Defense)
+## Recipe 1: Securing Software Agent Database & Tool Execution (TOCTOU Defense)
 
 **Problem:** An autonomous AI agent generates and executes SQL queries or system commands. An adversary or concurrent worker attempts a Time-of-Check to Time-of-Use (TOCTOU) injection by mutating the memory buffer after the planner issues the action but before the host engine executes it.
 
@@ -14,12 +14,12 @@ Recipe 1: High-Assurance SQL Tool Calling with Cryptographic Receipt Verificatio
 """
 import secrets
 import time
-from relulayer_py import ReluBoundary
+from relulayer import ReluBoundary
 
 # 1. Initialize the boundary with the application shared secret
 SHARED_SECRET = secrets.token_bytes(32)
-authority_boundary = ReluBoundary(SHARED_SECRET)
-interceptor_boundary = ReluBoundary(SHARED_SECRET)
+authority_boundary = ReluBoundary(hmac_key=SHARED_SECRET)
+interceptor_boundary = ReluBoundary(hmac_key=SHARED_SECRET)
 
 
 def agent_planner_issue_query(query: str, sequence_counter: int):
@@ -43,7 +43,7 @@ def host_db_executor(action_name: bytes, payload: bytes, receipt: bytes):
     except ValueError:
         raise PermissionError("SECURITY ALERT: Tampered payload or invalid receipt rejected!")
 
-    # Safe to execute against the physical database
+    # Safe to execute against the database
     print(f"[EXECUTED]: {payload.decode('utf-8')}")
 
 
@@ -72,7 +72,7 @@ except PermissionError as e:
 
 ## Recipe 2: Preventing Replay Attacks Across Distributed Agent Calls
 
-**Problem:** An adversary captures a valid signed execution receipt from network traffic or shared memory and replays it later to duplicate a transaction or re-execute a physical command.
+**Problem:** An adversary captures a valid signed execution receipt from network traffic or shared memory and replays it later to duplicate a transaction or re-execute a command.
 
 ```python
 """
@@ -80,11 +80,11 @@ Recipe 2: Enforcing Replay Monotonicity Across Distributed Multi-Agent Operation
 """
 import secrets
 import time
-from relulayer_py import ReluBoundary
+from relulayer import ReluBoundary
 
 SECRET = secrets.token_bytes(32)
-sender = ReluBoundary(SECRET)
-receiver = ReluBoundary(SECRET)
+sender = ReluBoundary(hmac_key=SECRET)
+receiver = ReluBoundary(hmac_key=SECRET)
 
 nonce = secrets.token_bytes(12)
 timestamp = int(time.time())
@@ -114,48 +114,48 @@ except ValueError:
 
 ---
 
-## Recipe 3: High-Frequency Robotics & Drone Motor Command Governor
+## Recipe 3: High-Frequency Simulation Step Governor
 
-**Problem:** An embodied reinforcement learning (RL) policy issues unconstrained motor demands that exceed ESC physical limits, risk motor flameout, or violate control margins during live flight or simulation steps.
+**Problem:** A reinforcement learning policy issues unconstrained simulation demands that exceed configured envelope limits during high-frequency simulation steps.
 
 ```python
 """
-Recipe 3: Sub-Microsecond Gym Step Interceptor for Real-Time Actuator Bounds
+Recipe 3: Sub-Microsecond Gym Step Interceptor for Real-Time Simulation Bounds
 """
 import secrets
 import time
 import numpy as np
-from relulayer_py import ReluBoundary
+from relulayer import ReluBoundary
 
 
-class ReluGovernedActuatorWrapper:
+class ReluGovernedSimulationWrapper:
     """
-    Drop-in gymnasium wrapper for robotics control loops (Isaac Gym, MuJoCo, PyBullet).
+    Drop-in gymnasium wrapper for simulation control loops (Isaac Gym, MuJoCo, PyBullet).
     Projects actions to safe bounds and authorizes each step with ReluLayer before
     passing it to the environment, adding no perceptible frame latency.
     """
 
-    def __init__(self, env, shared_secret: bytes, min_throttle=0.05, max_throttle=0.95):
+    def __init__(self, env, shared_secret: bytes, min_value=0.05, max_value=0.95):
         self.env = env
-        self.min_throttle = min_throttle
-        self.max_throttle = max_throttle
+        self.min_value = min_value
+        self.max_value = max_value
         self.clamped_events = 0
 
-        self.planner = ReluBoundary(shared_secret)
-        self.controller = ReluBoundary(shared_secret)
+        self.planner = ReluBoundary(hmac_key=shared_secret)
+        self.controller = ReluBoundary(hmac_key=shared_secret)
         self.nonce = secrets.token_bytes(12)
         self.counter = 0
 
     def step(self, raw_action: np.ndarray):
-        # Deterministic projection: clamp each actuator channel to safe envelope
-        safe_action = np.clip(raw_action, self.min_throttle, self.max_throttle)
+        # Deterministic projection: clamp each simulation channel to safe envelope
+        safe_action = np.clip(raw_action, self.min_value, self.max_value)
         if not np.array_equal(raw_action, safe_action):
             self.clamped_events += 1
 
-        # ReluLayer authorizes the actuator command in <1 µs before execution
+        # ReluLayer authorizes the simulation command in <1 µs before execution
         self.counter += 1
         timestamp = int(time.time())
-        action_id = b"motor_step"
+        action_id = b"sim_step"
         payload = safe_action.tobytes()
         receipt = self.planner.issue_receipt(
             self.nonce, timestamp, self.counter, action_id, payload
@@ -172,7 +172,7 @@ class MockEnv:
 
 
 env = MockEnv()
-wrapped = ReluGovernedActuatorWrapper(env, secrets.token_bytes(32))
+wrapped = ReluGovernedSimulationWrapper(env, secrets.token_bytes(32))
 action = np.array([0.02, 0.5, 1.1], dtype=np.float32)
 obs, reward, terminated, truncated, info = wrapped.step(action)
 print(f"[GOVERNED STEP] raw={action} safe={obs} clamped_events={wrapped.clamped_events}")

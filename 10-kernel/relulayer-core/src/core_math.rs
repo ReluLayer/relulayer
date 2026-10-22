@@ -108,7 +108,7 @@ pub fn solve_active_set_scalar(
     }
 }
 
-/// Standard C-ABI entry point for external flight controllers (PX4, ArduPilot, bare-metal C).
+/// Standard C-ABI entry point for host simulation runtimes and language bindings.
 #[allow(unsafe_code)]
 #[no_mangle]
 pub extern "C" fn relulayer_solve_active_set(

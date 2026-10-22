@@ -8,6 +8,11 @@
 
 # ==============================================================================
 
+# WARNING: This script overwrites src/lib.rs, src/benchmark_harness.rs,
+# src/pendulum_sim.rs, and src/kani_proofs.rs with heredoc snapshots.
+# Run it only when those files are known to be corrupted; otherwise use
+# run_kani_verification_and_commit.sh or invoke cargo kani directly.
+
 set -euo pipefail
 
 # Ensure we are in 10-kernel/relulayer-core
@@ -313,4 +318,11 @@ kani::assert(res.iterations <= 10);
 EOF
 
 echo "All files sanitized. Running AWS Kani Formal Bounded Model Checking..."
-cargo kani --default-unwind 12
+# Run each harness individually with a timeout; do not override per-harness unwind values.
+timeout 60s cargo kani --harness verify_active_set_no_panics
+timeout 60s cargo kani --harness verify_feasible_bounds
+timeout 60s cargo kani --harness verify_infeasible_fallback_boundedness
+timeout 60s cargo kani --harness verify_deterministic_wcet
+timeout 60s cargo kani --harness verify_multivar_no_panics
+timeout 60s cargo kani --harness verify_multivar_actuator_bounds
+timeout 60s cargo kani --harness verify_multivar_iteration_bound

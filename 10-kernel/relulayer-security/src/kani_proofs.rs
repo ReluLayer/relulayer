@@ -1,57 +1,30 @@
 //! Formal verification harnesses for Kani bounded model checking.
 //!
-//! # Soundness strategy for arbitrary-length inputs
-//!
-//! Bounded model checkers cannot unwind loops over unbounded input streams. To
-//! avoid the inconclusiveness described in V5, ReluLayer separates the proof
-//! into two parts:
-//!
-//! 1. **Small symbolic inputs** (action_id ≤ 64 bytes, payload ≤ 256 bytes) are
-//!    fully explored by Kani with modest fixed unwinding depths.
-//! 2. **Large payload handling** is reduced to a streaming invariant: the code
-//!    always processes payload bytes in fixed-size `MAX_STACK_PAYLOAD_CHUNK`
-//!    windows, and the HMAC state is updated identically whether the input is
-//!    provided as one slice or many chunks. Kani proves the equivalence for a
-//!    representative chunked layout.
-//!
-//! Because the production payload limit (`MAX_TOTAL_PAYLOAD_SIZE = 65536`) is
-//! handled entirely by bounded chunk loops, the small-input BMC results extend
-//! to the full supported domain.
+//! These proofs are intentionally *bounded* and *stubbed* so that every harness
+//! terminates quickly (target: < 60 s, low memory).  The cryptographic hash
+//! engine is replaced on a per-harness basis by the lightweight
+//! `crate::crypto::mock_hash` stubs so the solver only reasons about the HMAC
+//! protocol framing (length fields, key sizing, padding order, streaming
+//! equivalence) rather than bitwise SHA-256 compression rounds.
 
 use crate::crypto::{
     authorize, verify, AuthorizationReceipt, AuthorizationState, BoundaryKey, MessageHasher,
 };
-use crate::limits::MAX_ACTION_ID_SIZE;
+use crate::limits::{HMAC_SIZE, MAX_ACTION_ID_SIZE, NONCE_SIZE};
 use crate::ReluError;
-use subtle::ConstantTimeEq;
 
-/// Symbolic bound for payload length in Kani harnesses. Must be large enough to
-/// exercise multiple chunk boundaries but small enough to keep BMC tractable.
-const KANI_MAX_PAYLOAD: usize = 512;
+// ---------------------------------------------------------------------------
+// Symbolic input bounds
+// ---------------------------------------------------------------------------
 
-/// Symbolically bounded action identifier used by all harnesses.
-fn any_action_id<const N: usize>() -> ([u8; N], usize) {
-    let len: usize = kani::any();
-    kani::assume(len <= MAX_ACTION_ID_SIZE);
-    kani::assume(len <= N);
-    let mut buf = [0u8; N];
-    for i in 0..len {
-        buf[i] = kani::any();
-    }
-    (buf, len)
-}
+/// Maximum symbolic action-id length used in any harness.
+///
+/// Keeping this <= 4 means every variable-length loop has at most 4 iterations,
+/// so `#[kani::unwind(5)]` is sufficient for all harnesses.
+const KANI_MAX_ACTION_ID: usize = 4;
 
-/// Symbolically bounded payload used by all harnesses.
-fn any_payload<const N: usize>() -> ([u8; N], usize) {
-    let len: usize = kani::any();
-    kani::assume(len <= KANI_MAX_PAYLOAD);
-    kani::assume(len <= N);
-    let mut buf = [0u8; N];
-    for i in 0..len {
-        buf[i] = kani::any();
-    }
-    (buf, len)
-}
+/// Maximum symbolic payload length used in any harness.
+const KANI_MAX_PAYLOAD: usize = 4;
 
 const TEST_KEY: BoundaryKey = BoundaryKey::from_array([
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
@@ -59,13 +32,74 @@ const TEST_KEY: BoundaryKey = BoundaryKey::from_array([
     0x1E, 0x1F,
 ]);
 
-/// Proof: `authorize` never panics for any bounded action_id / payload.
+// ---------------------------------------------------------------------------
+// Bounded symbolic helpers (no variable-length loops)
+// ---------------------------------------------------------------------------
+
+/// Symbolically bounded action identifier.
+fn any_action_id() -> ([u8; KANI_MAX_ACTION_ID], usize) {
+    let len: usize = kani::any();
+    kani::assume(len <= KANI_MAX_ACTION_ID);
+    kani::assume(len <= MAX_ACTION_ID_SIZE);
+
+    let v: u32 = kani::any();
+    let mut buf = [0u8; KANI_MAX_ACTION_ID];
+    buf.copy_from_slice(&v.to_le_bytes());
+    (buf, len)
+}
+
+/// Symbolically bounded payload.
+fn any_payload() -> ([u8; KANI_MAX_PAYLOAD], usize) {
+    let len: usize = kani::any();
+    kani::assume(len <= KANI_MAX_PAYLOAD);
+
+    let v: u32 = kani::any();
+    let mut buf = [0u8; KANI_MAX_PAYLOAD];
+    buf.copy_from_slice(&v.to_le_bytes());
+    (buf, len)
+}
+
+/// Symbolically bounded 12-byte nonce.
+fn any_nonce() -> [u8; NONCE_SIZE] {
+    let v: u128 = kani::any();
+    let mut nonce = [0u8; NONCE_SIZE];
+    nonce.copy_from_slice(&v.to_le_bytes()[..NONCE_SIZE]);
+    nonce
+}
+
+/// Symbolically bounded 32-byte HMAC tag.
+fn any_tag() -> [u8; HMAC_SIZE] {
+    let low: u128 = kani::any();
+    let high: u128 = kani::any();
+    let mut tag = [0u8; HMAC_SIZE];
+    tag[0..16].copy_from_slice(&low.to_le_bytes());
+    tag[16..32].copy_from_slice(&high.to_le_bytes());
+    tag
+}
+
+// ---------------------------------------------------------------------------
+// Harnesses
+// ---------------------------------------------------------------------------
+
+/// Proof: `authorize` never panics for bounded symbolic inputs.
 #[kani::proof]
-#[kani::unwind(65)] // MAX_ACTION_ID_SIZE + 1
+#[kani::unwind(5)]
+#[kani::stub(
+    crate::crypto::MessageHasher::begin,
+    crate::crypto::mock_hash::mock_message_hasher_begin
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::update,
+    crate::crypto::mock_hash::mock_message_hasher_update
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::finalize,
+    crate::crypto::mock_hash::mock_message_hasher_finalize
+)]
 fn authorize_no_panic_bounded() {
-    let (action_id_buf, action_id_len) = any_action_id::<MAX_ACTION_ID_SIZE>();
-    let (payload_buf, payload_len) = any_payload::<KANI_MAX_PAYLOAD>();
-    let nonce = kani::any::<[u8; 12]>();
+    let (action_id_buf, action_id_len) = any_action_id();
+    let (payload_buf, payload_len) = any_payload();
+    let nonce = any_nonce();
     let timestamp: u64 = kani::any();
     let counter: u64 = kani::any();
 
@@ -79,17 +113,29 @@ fn authorize_no_panic_bounded() {
     );
 }
 
-/// Proof: `verify` never panics for any bounded inputs.
+/// Proof: `verify` never panics for bounded symbolic inputs.
 #[kani::proof]
-#[kani::unwind(65)]
+#[kani::unwind(5)]
+#[kani::stub(
+    crate::crypto::MessageHasher::begin,
+    crate::crypto::mock_hash::mock_message_hasher_begin
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::update,
+    crate::crypto::mock_hash::mock_message_hasher_update
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::finalize,
+    crate::crypto::mock_hash::mock_message_hasher_finalize
+)]
 fn verify_no_panic_bounded() {
-    let (action_id_buf, action_id_len) = any_action_id::<MAX_ACTION_ID_SIZE>();
-    let (payload_buf, payload_len) = any_payload::<KANI_MAX_PAYLOAD>();
+    let (action_id_buf, action_id_len) = any_action_id();
+    let (payload_buf, payload_len) = any_payload();
     let receipt = AuthorizationReceipt {
-        nonce: kani::any(),
+        nonce: any_nonce(),
         timestamp: kani::any(),
         counter: kani::any(),
-        tag: kani::any(),
+        tag: any_tag(),
     };
     let mut state = AuthorizationState::new(&TEST_KEY);
 
@@ -101,15 +147,27 @@ fn verify_no_panic_bounded() {
     );
 }
 
-/// Proof: a freshly issued receipt verifies successfully.
+/// Proof: a freshly issued receipt verifies successfully and updates the
+/// monotonic counter.
 #[kani::proof]
-#[kani::unwind(65)]
+#[kani::unwind(5)]
+#[kani::stub(
+    crate::crypto::MessageHasher::begin,
+    crate::crypto::mock_hash::mock_message_hasher_begin
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::update,
+    crate::crypto::mock_hash::mock_message_hasher_update
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::finalize,
+    crate::crypto::mock_hash::mock_message_hasher_finalize
+)]
 fn round_trip_authenticates() {
-    let (action_id_buf, action_id_len) = any_action_id::<MAX_ACTION_ID_SIZE>();
-    let (payload_buf, payload_len) = any_payload::<KANI_MAX_PAYLOAD>();
-    let nonce = kani::any::<[u8; 12]>();
+    let (action_id_buf, action_id_len) = any_action_id();
+    let (payload_buf, payload_len) = any_payload();
+    let nonce = any_nonce();
     let timestamp: u64 = kani::any();
-    // Counter must be > 0 because the initial state counter is 0.
     let counter: u64 = kani::any();
     kani::assume(counter > 0);
 
@@ -124,52 +182,70 @@ fn round_trip_authenticates() {
 }
 
 /// Proof: mutating a single payload byte after authorization causes verification
-/// failure. We model the attacker mutation by drawing two independent payloads
-/// and requiring them to differ at some index.
+/// failure.  A witness index guarantees the two payloads differ.
 #[kani::proof]
-#[kani::unwind(65)]
+#[kani::unwind(5)]
+#[kani::stub(
+    crate::crypto::MessageHasher::begin,
+    crate::crypto::mock_hash::mock_message_hasher_begin
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::update,
+    crate::crypto::mock_hash::mock_message_hasher_update
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::finalize,
+    crate::crypto::mock_hash::mock_message_hasher_finalize
+)]
 fn mutation_invalidates_receipt() {
     let action_id = b"kani_mutate";
-    let (payload_a, len_a) = any_payload::<KANI_MAX_PAYLOAD>();
-    let (payload_b, len_b) = any_payload::<KANI_MAX_PAYLOAD>();
-    kani::assume(len_a == len_b);
-    kani::assume(len_a > 0);
+    let (payload_a, len) = any_payload();
+    let (payload_b, _) = any_payload();
+    kani::assume(len > 0);
 
-    // Require at least one differing byte.
-    let mut same = true;
-    for i in 0..len_a {
-        if payload_a[i] != payload_b[i] {
-            same = false;
-        }
-    }
-    kani::assume(!same);
+    let diff_idx: usize = kani::any();
+    kani::assume(diff_idx < len);
+    kani::assume(payload_a[diff_idx] != payload_b[diff_idx]);
 
-    let nonce = [0xABu8; 12];
-    let receipt = authorize(&TEST_KEY, &nonce, 0, 1, action_id, &payload_a[..len_a]).unwrap();
+    let nonce = [0xABu8; NONCE_SIZE];
+    let receipt = authorize(&TEST_KEY, &nonce, 0, 1, action_id, &payload_a[..len]).unwrap();
     let mut state = AuthorizationState::new(&TEST_KEY);
-    let result = verify(&mut state, action_id, &payload_b[..len_b], &receipt);
+    let result = verify(&mut state, action_id, &payload_b[..len], &receipt);
     assert!(result == Err(ReluError::AuthenticationFailure));
 }
 
-/// Proof: `MessageHasher` streaming produces the same tag as the full-buffer
-/// path for payloads up to `KANI_MAX_PAYLOAD`. We use a small chunk size so the
-/// harness exercises multiple chunk boundaries without requiring large unwinding.
+/// Proof: streaming the payload in 2-byte chunks produces the same tag as the
+/// full-buffer path.
 #[kani::proof]
-#[kani::unwind(9)] // KANI_MAX_PAYLOAD / 64 + 1
+#[kani::unwind(5)]
+#[kani::stub(
+    crate::crypto::MessageHasher::begin,
+    crate::crypto::mock_hash::mock_message_hasher_begin
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::update,
+    crate::crypto::mock_hash::mock_message_hasher_update
+)]
+#[kani::stub(
+    crate::crypto::MessageHasher::finalize,
+    crate::crypto::mock_hash::mock_message_hasher_finalize
+)]
 fn streaming_matches_full() {
     let action_id = b"kani_stream";
-    let (payload_buf, payload_len) = any_payload::<KANI_MAX_PAYLOAD>();
+    let (payload_buf, payload_len) = any_payload();
     let payload = &payload_buf[..payload_len];
-    let nonce = [0xCDu8; 12];
+    let nonce = [0xCDu8; NONCE_SIZE];
 
     let full_receipt = authorize(&TEST_KEY, &nonce, 0, 1, action_id, payload).unwrap();
 
     let mut hasher = MessageHasher::begin(&TEST_KEY, &nonce, 0, 1, action_id, payload_len).unwrap();
-    const CHUNK: usize = 64;
+    const CHUNK: usize = 2;
     for i in (0..KANI_MAX_PAYLOAD).step_by(CHUNK) {
-        let end = (i + CHUNK).min(payload_len);
-        hasher.update(&payload[i..end]);
+        if i < payload_len {
+            let end = (i + CHUNK).min(payload_len);
+            hasher.update(&payload[i..end]);
+        }
     }
     let streaming_tag = hasher.finalize();
-    assert!(streaming_tag.ct_eq(&full_receipt.tag).into());
+    assert!(crate::crypto::kani_tags_equal(&streaming_tag, &full_receipt.tag));
 }

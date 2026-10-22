@@ -30,13 +30,27 @@ class ReluBoundary:
     def __init__(
         self,
         rate_limit: int = 1000,
-        max_velocity_rad_s: float = 4.18,
+        max_rate: float = 4.18,
         monotonic_window_size: int = 64,
         hmac_key: Optional[bytes] = None,
     ) -> None: ...
     def authorize_action(
         self,
-        target_axis: int,
-        requested_position: float,
-        commanded_velocity: float,
+        channel: int,
+        setpoint: float,
+        delta: float,
     ) -> ReluReceipt: ...
+    def issue_receipt(
+        self,
+        nonce: bytes,
+        timestamp: int,
+        counter: int,
+        action_id: bytes,
+        payload: bytes,
+    ) -> bytes: ...
+    def intercept_and_authorize(
+        self,
+        action_id: bytes,
+        payload: bytes,
+        receipt: bytes,
+    ) -> None: ...

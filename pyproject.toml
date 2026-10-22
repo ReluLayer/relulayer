@@ -4,18 +4,18 @@ build-backend = "maturin"
 
 [project]
 name = "relulayer"
-version = "0.2.0"
-description = "Deterministic zero-heap edge governor and execution gatekeeper for physical autonomous systems."
+version = "0.2.1"
+description = "Deterministic zero-heap agent governor and execution gatekeeper for software agent workflows and simulation testbeds."
 readme = "README.md"
 authors = [{ name = "Ishmael Amin", email = "ishmael.amin@outlook.com" }]
 license = { text = "MIT OR Apache-2.0" }
 requires-python = ">=3.9"
 keywords = [
-    "robotics",
+    "agent-governance",
     "safety",
     "deterministic",
     "execution-gatekeeper",
-    "no-std",
+    "simulation",
     "formal-methods",
     "edge-governor",
 ]
@@ -49,4 +49,15 @@ python-source = "python"
 module-name = "relulayer._relulayer"
 manifest-path = "crates/relulayer-py/Cargo.toml"
 features = ["pyo3/extension-module"]
-include = ["LICENSE-MIT", "LICENSE-APACHE"]
+exclude = [
+    "10-kernel/**",
+    "crates/relulayer-ffi/**",
+    "crates/relulayer-proofs/**",
+    "crates/relulayer-safety/**",
+    "crates/relulayer-fleet/**",
+    "20-pilots-and-proposals/**",
+    "30-tools-and-ops/**",
+    ".cargo/**",
+    "scripts/**",
+    "**/*.ld",
+]
