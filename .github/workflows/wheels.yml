@@ -63,7 +63,7 @@ jobs:
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
 
       - name: Build Wheels
-        uses: PyO3/maturin-action@b18fe595980d2e77eac09d5b8f697705ca22fbc8 # v1.46.0
+        uses: PyO3/maturin-action@5f8a1b3b0aad13193f46c9131f9b9e663def8ce5 # v1.46.0
         with:
           target: ${{ matrix.platform.target }}
           manylinux: auto
@@ -111,7 +111,7 @@ jobs:
           python3 -c "import certifi, sys; print('certifi:', certifi.__version__); sys.exit(0 if certifi.__version__ >= '2026.10.19' else 1)"
 
       - name: Build sdist
-        uses: PyO3/maturin-action@b18fe595980d2e77eac09d5b8f697705ca22fbc8 # v1.46.0
+        uses: PyO3/maturin-action@5f8a1b3b0aad13193f46c9131f9b9e663def8ce5 # v1.46.0
         with:
           command: sdist
           args: --out dist
