@@ -27,18 +27,19 @@ jobs:
         platform:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            maturin-args: --target x86_64-unknown-linux-gnu --manylinux 2_28
+            maturin-args: --target x86_64-unknown-linux-gnu --manylinux 2_28 -i python3.10 python3.11 python3.12 python3.13
+            container: quay.io/pypa/manylinux_2_28_x86_64:2026.10.22-0@sha256:076b19ef6e698f28649fa817c49d14443201e01da85240e8e52f93e8daa49bff
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            maturin-args: --target aarch64-unknown-linux-gnu --manylinux 2_28
+            maturin-args: --target aarch64-unknown-linux-gnu --manylinux 2_28 -i python3.10 python3.11 python3.12 python3.13
             container: quay.io/pypa/manylinux_2_28_aarch64:2026.10.22-0@sha256:270a5e59af09f02dfc07fe4bb2cb2c5625c76d085cfa47f87dd93d9026eacc75
             docker-options: --platform linux/arm64
           - os: macos-14
             target: aarch64-apple-darwin
-            maturin-args: --target aarch64-apple-darwin
+            maturin-args: --target aarch64-apple-darwin -i python3.10 python3.11 python3.12 python3.13
           - os: macos-14
             target: x86_64-apple-darwin
-            maturin-args: --target x86_64-apple-darwin
+            maturin-args: --target x86_64-apple-darwin -i python3.10 python3.11 python3.12 python3.13
 
     steps:
       - name: Checkout Repository
@@ -47,7 +48,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
-          python-version: '3.11'
+          python-version: |
+            3.10
+            3.11
+            3.12
+            3.13
 
       - name: Securely upgrade pip and certifi (host runner)
         shell: bash
@@ -189,15 +194,17 @@ jobs:
 
       - name: Install Wheel and Verify Fast-Path
         run: |
-          SYS=$(python -c 'import platform; s=platform.system().lower(); print("macosx" if s=="darwin" else s)')
+          SYS=$(python -c 'import platform; s=platform.system().lower(); print("macosx" if s=="darwin" else "manylinux")')
+          ARCH=$(python -c 'import platform; print(platform.machine())')
           ABI=$(python -c 'import sys; print(f"cp{sys.version_info.major}{sys.version_info.minor}")')
-          WHEEL=$(find artifacts -name "*${SYS}*${ABI}*.whl" | head -n 1)
+          WHEEL=$(find artifacts -name "*${ABI}*${SYS}*${ARCH}*.whl" | head -n 1)
           if [ -n "$WHEEL" ]; then
             python -m pip install "$WHEEL"
             python -c "import relulayer; print('ReluLayer loaded successfully. Version:', relulayer.__version__)"
-            python -c "from relulayer import ReluBoundary; boundary = ReluBoundary(rate_limit=100); receipt = boundary.authorize_action(0, 1.57, 2.0); assert receipt.is_authorized"
+            python -c "from relulayer import ReluBoundary; boundary = ReluBoundary(max_rate=100); receipt = boundary.authorize_action(0, 1.57, 2.0); assert receipt.is_authorized"
           else
-            echo "No wheel found for current architecture; skipping."
+            echo "No wheel found for current architecture; failing."
+            exit 1
           fi
 
   publish:
@@ -223,7 +230,7 @@ jobs:
           python3 -c "import certifi, sys; print('certifi:', certifi.__version__); sys.exit(0 if certifi.__version__ >= '2026.10.19' else 1)"
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@c03e7fc4fb68e760409a4eb05a41050da01d8412 # v1.12.3
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           packages-dir: dist/
           skip-existing: true
