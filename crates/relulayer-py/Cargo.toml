@@ -1,0 +1,41 @@
+[package]
+name = "_relulayer"
+version = "0.2.2"
+edition = "2021"
+description = "Deterministic zero-heap agent governor and execution gatekeeper for software agent workflows and simulation testbeds."
+license = "MIT OR Apache-2.0"
+authors = ["Ishmael Amin <ishmael@atelierlogicgroup.com>"]
+documentation = "https://github.com/relulayer/relulayer#readme"
+homepage = "https://github.com/relulayer/relulayer"
+repository = "https://github.com/relulayer/relulayer"
+publish = false
+exclude = [
+    "examples/**",
+    "tests/**",
+    ".pytest_cache/**",
+    ".venv/**",
+]
+
+[workspace]
+members = [".", "vendor/relulayer-core", "vendor/relulayer-security"]
+resolver = "2"
+
+[workspace.package]
+version = "0.2.2"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "_relulayer"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = "0.23"
+relulayer-core = { path = "vendor/relulayer-core" }
+relulayer-security = { path = "vendor/relulayer-security" }
+getrandom = "0.2"
+
+[features]
+default = []
+# Enable when building the extension module (maturin enables this automatically).
+extension-module = ["pyo3/extension-module"]

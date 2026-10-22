@@ -1,0 +1,19 @@
+[package]
+name = "relulayer-core"
+version = "0.2.2"
+edition = "2021"
+authors = ["Ishmael Amin <ishmael@atelierlogicgroup.com>"]
+description = "Core deterministic math kernels for the ReluLayer open-source simulation package."
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["rlib", "staticlib", "cdylib"]
+
+[features]
+default = ["std"]
+# Enable standard-library support. Disable for `#![no_std]` production builds.
+std = []
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

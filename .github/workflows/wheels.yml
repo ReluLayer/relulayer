@@ -1,0 +1,229 @@
+name: Release & Binary Wheels
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  # Securely pinned pip 26.2.2 wheel for bootstrapping in environments where the
+  # existing pip may trust compromised eMudhra/emSign intermediate certificates.
+  # See: https://discuss.python.org/t/information-for-python-users-regarding-emudhra-emsign-ca-certificate-security-incident/109576
+  SECURE_PIP_URL: "https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl"
+  SECURE_PIP_SHA256: "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
+
+jobs:
+  build-wheels:
+    name: Build Wheels (${{ matrix.platform.target }})
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            maturin-args: --target x86_64-unknown-linux-gnu --manylinux 2_28
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            maturin-args: --target aarch64-unknown-linux-gnu --manylinux 2_28
+            container: quay.io/pypa/manylinux_2_28_aarch64:2026.10.22-0@sha256:270a5e59af09f02dfc07fe4bb2cb2c5625c76d085cfa47f87dd93d9026eacc75
+            docker-options: --platform linux/arm64
+          - os: macos-14
+            target: aarch64-apple-darwin
+            maturin-args: --target aarch64-apple-darwin
+          - os: macos-14
+            target: x86_64-apple-darwin
+            maturin-args: --target x86_64-apple-darwin
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.11'
+
+      - name: Securely upgrade pip and certifi (host runner)
+        shell: bash
+        run: |
+          python3 -m pip install \
+            "pip @ ${{ env.SECURE_PIP_URL }}#sha256=${{ env.SECURE_PIP_SHA256 }}"
+          python3 -m pip install --upgrade "certifi>=2026.10.19"
+          python3 -m pip --version
+          python3 -c "import certifi, sys; print('certifi:', certifi.__version__); sys.exit(0 if certifi.__version__ >= '2026.10.19' else 1)"
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux' && contains(matrix.platform.target, 'aarch64')
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
+
+      - name: Build Wheels
+        uses: PyO3/maturin-action@b18fe595980d2e77eac09d5b8f697705ca22fbc8 # v1.46.0
+        with:
+          target: ${{ matrix.platform.target }}
+          manylinux: auto
+          args: --release --out dist ${{ matrix.platform.maturin-args }}
+          container: ${{ matrix.platform.container }}
+          docker-options: ${{ matrix.platform.docker-options }}
+          before-script-linux: |
+            git config --global --add safe.directory "*"
+            # Upgrade pip and certifi inside the manylinux container so that
+            # dependency downloads during the build are not exposed to the
+            # eMudhra/emSign compromised CA intermediates.
+            for py in /opt/python/cp3*/bin/python; do
+              if [ -x "$py" ]; then
+                # pip 26.2+ dropped support for Python 3.9
+                if "$py" -c "import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)"; then
+                  "$py" -m pip install \
+                    "pip @ ${{ env.SECURE_PIP_URL }}#sha256=${{ env.SECURE_PIP_SHA256 }}"
+                fi
+                "$py" -m pip install --upgrade "certifi>=2026.10.19"
+              fi
+            done
+
+      - name: Upload Built Wheels
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        with:
+          name: wheels-${{ matrix.platform.target }}
+          path: dist/*.whl
+
+  build-sdist:
+    name: Build Source Distribution (sdist)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.11'
+
+      - name: Securely upgrade pip and certifi
+        shell: bash
+        run: |
+          python3 -m pip install \
+            "pip @ ${{ env.SECURE_PIP_URL }}#sha256=${{ env.SECURE_PIP_SHA256 }}"
+          python3 -m pip install --upgrade "certifi>=2026.10.19"
+          python3 -m pip --version
+          python3 -c "import certifi, sys; print('certifi:', certifi.__version__); sys.exit(0 if certifi.__version__ >= '2026.10.19' else 1)"
+
+      - name: Build sdist
+        uses: PyO3/maturin-action@b18fe595980d2e77eac09d5b8f697705ca22fbc8 # v1.46.0
+        with:
+          command: sdist
+          args: --out dist
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        with:
+          name: wheels-sdist
+          path: dist/*.tar.gz
+
+  verify-sdist:
+    name: Verify wheel builds from sdist
+    needs: [build-sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.11'
+
+      - name: Securely upgrade pip and certifi
+        shell: bash
+        run: |
+          python3 -m pip install \
+            "pip @ ${{ env.SECURE_PIP_URL }}#sha256=${{ env.SECURE_PIP_SHA256 }}"
+          python3 -m pip install --upgrade "certifi>=2026.10.19"
+          python3 -m pip install maturin
+          python3 -m pip --version
+          python3 -c "import certifi, sys; print('certifi:', certifi.__version__); sys.exit(0 if certifi.__version__ >= '2026.10.19' else 1)"
+
+      - name: Download sdist
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: wheels-sdist
+          path: dist
+
+      - name: Build wheel from sdist
+        shell: bash
+        run: |
+          tar -xzf dist/relulayer-*.tar.gz -C dist
+          SDIST_ROOT=$(find dist -maxdepth 1 -type d -name 'relulayer-*' | head -n 1)
+          cd "${SDIST_ROOT}"
+          maturin build --release --out ../
+
+  test-wheels:
+    name: Smoke Test Built Wheels (${{ matrix.os }} - Py${{ matrix.python-version }})
+    needs: [build-wheels]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          path: artifacts
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Securely upgrade pip and certifi
+        shell: bash
+        run: |
+          python -m pip install \
+            "pip @ ${{ env.SECURE_PIP_URL }}#sha256=${{ env.SECURE_PIP_SHA256 }}"
+          python -m pip install --upgrade "certifi>=2026.10.19"
+
+      - name: Install Wheel and Verify Fast-Path
+        run: |
+          SYS=$(python -c 'import platform; s=platform.system().lower(); print("macosx" if s=="darwin" else s)')
+          ABI=$(python -c 'import sys; print(f"cp{sys.version_info.major}{sys.version_info.minor}")')
+          WHEEL=$(find artifacts -name "*${SYS}*${ABI}*.whl" | head -n 1)
+          if [ -n "$WHEEL" ]; then
+            python -m pip install "$WHEEL"
+            python -c "import relulayer; print('ReluLayer loaded successfully. Version:', relulayer.__version__)"
+            python -c "from relulayer import ReluBoundary; boundary = ReluBoundary(rate_limit=100); receipt = boundary.authorize_action(0, 1.57, 2.0); assert receipt.is_authorized"
+          else
+            echo "No wheel found for current architecture; skipping."
+          fi
+
+  publish:
+    name: Publish to PyPI
+    needs: [build-wheels, build-sdist, verify-sdist, test-wheels]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify runner pip/certifi before publish
+        shell: bash
+        run: |
+          python3 -m pip install \
+            "pip @ ${{ env.SECURE_PIP_URL }}#sha256=${{ env.SECURE_PIP_SHA256 }}"
+          python3 -m pip install --upgrade "certifi>=2026.10.19"
+          python3 -m pip --version
+          python3 -c "import certifi, sys; print('certifi:', certifi.__version__); sys.exit(0 if certifi.__version__ >= '2026.10.19' else 1)"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@c03e7fc4fb68e760409a4eb05a41050da01d8412 # v1.12.3
+        with:
+          packages-dir: dist/
+          skip-existing: true
